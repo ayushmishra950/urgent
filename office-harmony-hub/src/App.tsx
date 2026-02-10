@@ -10,7 +10,6 @@ import Dashboard from "@/pages/Dashboard";
 import Users from "@/pages/Users";
 import Companies from "@/pages/Companies";
 import Departments from "@/pages/Departments";
-import Tasks from "@/pages/Tasks";
 import Attendance from "@/pages/Attendance";
 import Leave from "@/pages/Leave";
 import Expenses from "@/pages/Expenses";

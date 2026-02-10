@@ -96,7 +96,7 @@ const applyLeave = async (req, res) => {
        await sendNotification({
        createdBy: userId,
      
-       userId: companyExists?.admins[0],
+       userId: companyExists?.admins[0]  || "69735b496f1896b3b1ceff46",
      
        userModel: "Employee", // "Admin" or "Employee"
      
@@ -291,7 +291,7 @@ const updateLeaveStatus = async (req, res) => {
      
        companyId: companyId,
      
-       message: `Leave Approved by Admin ${admin?.username}`,
+       message: `Leave ${status} by Admin ${admin?.username}`,
      
        type: "leave",
      

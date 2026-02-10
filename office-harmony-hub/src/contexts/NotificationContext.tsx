@@ -8,6 +8,7 @@ interface NotificationContextType {
   notifications: Notification[];
   markAsRead: (id: string) => void;
   deleteNotification: (id: string) => void;
+  unreadCount: number;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -35,7 +36,14 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
     socketClient.on("newNotification", (notification: Notification) => {
       console.log(notification)
       if (notification.userId === user._id) {
-        toast({ title: notification.message, className:"bg-yellow-600" });
+        if(notification?.type === "task"){
+        toast({ title: notification?.type, description:`${notification?.message} Assigned By ${notification?.createdBy?.username || notification?.createdBy?.fullName}`, className:"bg-yellow-600" });
+
+        }
+        else{
+        toast({ title: notification?.type, description:notification?.message, className:"bg-yellow-600" });
+
+        }
         setNotifications((prev) => [notification, ...prev]);
       }
     });
@@ -54,9 +62,9 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
   const deleteNotification = (id: string) => {
     setNotifications((prev) => prev.filter((n) => n._id !== id));
   };
-
+ const unreadCount = notifications.filter(n => !n.read).length;
   return (
-    <NotificationContext.Provider value={{ notifications, markAsRead, deleteNotification }}>
+    <NotificationContext.Provider value={{ notifications, unreadCount, markAsRead, deleteNotification }}>
       {children}
     </NotificationContext.Provider>
   );

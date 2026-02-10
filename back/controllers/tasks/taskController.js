@@ -191,6 +191,7 @@ const createTask = async (req, res) => {
   referenceId: task._id
 });
 
+
     res.status(201).json({
       success: true,
       message: "Task created successfully",
@@ -482,29 +483,21 @@ const taskStatusChange = async (req, res) => {
 
        if(task?.status==="completed"){
      await recentActivity.create({title:"Task Completed.", createdBy:user?._id, createdByRole:role==="admin"?"Admin":"Employee", companyId:companyId});
-  await sendNotification({
-  companyId,
 
-  // 🔔 receiver (jis user ko notification dikhani hai)
-  userId:
-    user?.role === "admin"
-      ? task?.managerId
-      : task?.createdBy,
+ await sendNotification({
+  createdBy: user?._id,
 
-  // 👤 receiver ka model
-  userModel:
-    user?.role === "admin"
-      ? "Employee"
-      : "Admin",
+  userId: user?.role==="admin"?task?.managerId : task?.createdBy,
 
-  message: `Task Completed: ${task?.name}`,
+  userModel: user?.role === "admin" ? "Employee" : "Admin", // "Admin" or "Employee"
+
+  companyId: companyId,
+
+  message: `task Completed: ${task.name}`,
 
   type: "task",
 
-  referenceId: task?._id,
-
-  // ✍️ actor (jisne action kiya)
-  createdBy: user?._id
+  referenceId: task._id
 });
 
 
@@ -539,28 +532,21 @@ const taskStatusChange = async (req, res) => {
       await subTask.save();
       if(subTask?.status==="completed"){
      await recentActivity.create({title:"Task Completed.", createdBy:user?._id, createdByRole:"Employee", companyId:companyId});
-     await sendNotification({
+
+await sendNotification({
+  createdBy: user?._id,
+
+  userId: user?.taskRole==="manager" || user?.role==="admin"?subTask?.employeeId : subTask?.createdBy,
+
+  userModel: user?.role === "admin" ? "Employee" : "Admin", // "Admin" or "Employee"
+
   companyId: companyId,
-  // 🔔 jis user ko notification dikhani hai
-  userId:
-    user?.role === "admin"
-      ? subTask?.employeeId
-      : subTask?.createdBy,
 
-  // 👤 receiver ka model
-  userModel:
-    user?.role === "admin"
-      ? "Employee"
-      : "Admin",
-
-  message: `Task Completed: ${task.name}`,
+  message: `Sub Task Completed: ${subTask.name}`,
 
   type: "task",
 
-  referenceId: task._id,
-
-  // ✍️ jisne action kiya
-  createdBy: user?._id
+  referenceId: subTask._id
 });
 
       }

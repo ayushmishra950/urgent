@@ -1,65 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import {
-  BarChart3,
-  Users,
-  Clock,
-  Receipt,
-  Wallet,
-  TrendingUp,
-  Download,
-  Calendar,
-} from 'lucide-react';
+import { BarChart3, Users, Clock, Receipt, Wallet, TrendingUp, Download, Calendar} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell} from 'recharts';
 import {getAnalyticsReportPage} from "@/services/Service";
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { Helmet } from "react-helmet-async";
 
-// const attendanceData = [
-//   { name: 'Mon', present: 145, absent: 15 },
-//   { name: 'Tue', present: 152, absent: 8 },
-//   { name: 'Wed', present: 148, absent: 12 },
-//   { name: 'Thu', present: 140, absent: 20 },
-//   { name: 'Fri', present: 138, absent: 22 },
-// ];
-
-// const expenseData = [
-//   { name: 'Jan', amount: 4500 },
-//   { name: 'Feb', amount: 3800 },
-//   { name: 'Mar', amount: 5200 },
-//   { name: 'Apr', amount: 4100 },
-//   { name: 'May', amount: 4800 },
-//   { name: 'Jun', amount: 5500 },
-// ];
-
-const departmentPerformance = [
-  { name: 'Engineering', tasks: 85, attendance: 92 },
-  { name: 'Marketing', tasks: 78, attendance: 88 },
-  { name: 'Sales', tasks: 92, attendance: 85 },
-  { name: 'HR', tasks: 88, attendance: 95 },
-  { name: 'Finance', tasks: 82, attendance: 90 },
-];
 
 const Reports: React.FC = () => {
   const {user} = useAuth();
@@ -106,7 +53,18 @@ const taskDistribution = [
   { name: 'Pending', value: analyticsData?.taskSummary?.pending ?? 0, color: 'hsl(215, 16%, 47%)' },
 ];
 
+const departmentPerformance = analyticsData?.departmentAnalytics?.map((v)=>{
   return (
+    {name:v?.departmentName, tasks: v?.completedTaskPercentage, attendance: v?.attendancePercentage}
+  )
+})
+
+  return (
+    <>
+    <Helmet>
+        <title>Report Page</title>
+        <meta name="description" content="This is the home page of our app" />
+      </Helmet>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -119,7 +77,7 @@ const taskDistribution = [
         </div>
 
         <div className="flex gap-3">
-          <Select defaultValue="this-month">
+          {/* <Select defaultValue="this-month">
             <SelectTrigger className="w-40">
               <Calendar className="w-4 h-4 mr-2" />
               <SelectValue />
@@ -131,11 +89,11 @@ const taskDistribution = [
               <SelectItem value="this-quarter">This Quarter</SelectItem>
               <SelectItem value="this-year">This Year</SelectItem>
             </SelectContent>
-          </Select>
-          <Button variant="outline">
+          </Select> */}
+          {/* <Button variant="outline">
             <Download className="w-4 h-4 mr-2" />
             Export
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -333,6 +291,7 @@ const taskDistribution = [
         </Card>
       </div>
     </div>
+    </>
   );
 };
 

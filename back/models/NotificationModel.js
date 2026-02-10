@@ -3,12 +3,12 @@ const { Schema, model } = mongoose;
 
 const NotificationSchema = new Schema(
   {
-    companyId: { type: Schema.Types.ObjectId, ref: "Company", required: true },
+    companyId: { type: Schema.Types.ObjectId, ref: "Company" },
     userId: { type: Schema.Types.ObjectId, refPath: "userModel", required: true },
     userModel: { type: String, enum: ["Admin", "Employee"], required: true },
     type: {
       type: String,
-      enum: ["task", "subtask", "leave", "general", "attendance"],
+      enum: ["task", "subtask", "leave", "general", "attendance", "project"],
       required: true,
     },
     message: { type: String, required: true },

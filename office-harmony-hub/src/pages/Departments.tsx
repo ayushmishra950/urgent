@@ -11,6 +11,7 @@ import DepartmentCard from "@/components/cards/DepartmentCard";
 import { getDepartments, getEmployees } from "@/services/Service";
 import axios from 'axios';
 import { useAuth } from "@/contexts/AuthContext";
+import { Helmet } from "react-helmet-async";
 
 
 const departmentColors = [
@@ -121,6 +122,11 @@ const Departments: React.FC = () => {
   };
 
   return (
+    <>
+    <Helmet>
+        <title>Department Page</title>
+        <meta name="description" content="This is the home page of our app" />
+      </Helmet>
     <div className="space-y-6">
       <DepartmentDialog
         isOpen={isDialogOpen}
@@ -290,6 +296,7 @@ const Departments: React.FC = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

@@ -41,6 +41,24 @@ export const getNotificationData = async (id, companyId) => {
   return res;
 };
 
+
+export const deleteNotifications = async (id,userId, companyId) => {
+  const res = await axios.delete(
+    `${import.meta.env.VITE_API_URL}/api/auth/notification/delete`,{params : {id:id,userId : userId, companyId : companyId}}
+  );
+
+  return res;
+};
+
+
+export const deleteAllNotifications = async (userId, companyId) => {
+  const res = await axios.delete(
+    `${import.meta.env.VITE_API_URL}/api/auth/notification/alldelete`,{params : {userId : userId, companyId : companyId}}
+  );
+
+  return res;
+};
+
 export const submitClockIn = async (id: string, companyId) => {
   const res = await axios.post(
     `${import.meta.env.VITE_API_URL}/api/attendance/clock-in/${id}`, {companyId}
@@ -58,6 +76,42 @@ export const submitClockOut = async (id: string, companyId) => {
   return res;
 };
 
+
+export const registerAdmin = async (obj) => {
+  const res = await axios.post(
+    `${import.meta.env.VITE_API_URL}/api/auth/register`, obj
+  );
+
+  return res;
+};
+
+
+
+export const updateAdmin = async (id, obj) => {
+  const res = await axios.put(
+    `${import.meta.env.VITE_API_URL}/api/auth/update/${id}`, obj
+  );
+
+  return res;
+};
+
+
+export const updateAdminStatus = async (adminId, userId, status) => {
+  const res = await axios.put(
+    `${import.meta.env.VITE_API_URL}/api/auth/admin/status`,{adminId:adminId, superAdminId:userId, status:status}
+  );
+
+  return res;
+};
+
+
+export const deleteAdmin = async (id, userId) => {
+  const res = await axios.delete(
+    `${import.meta.env.VITE_API_URL}/api/auth/delete`, {params: {id:id, userId:userId}}
+  );
+
+  return res;
+};
 
 export const loginUser = async (email, password) => {
   const res = await axios.post(

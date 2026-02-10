@@ -134,21 +134,21 @@ const createSubTask = async (req, res) => {
       { new: true }
     );
 
- await sendNotification({
-  companyId: companyId,
-
-  userId: employeeId, // 👈 jis employee ko notification dikhani hai
-
-  userModel: createdByRole === "Admin" ? "Employee" : "Admin",
-
-  message: `New task assigned: ${task.name}`,
-
-  type: "task",
-
-  referenceId: task._id,
-
-  createdBy: createdBy
-});
+  await sendNotification({
+           createdBy: createdBy,
+         
+           userId: employeeId,
+         
+           userModel: createdByRole === "Admin" ? "Employee" : "Admin", // "Admin" or "Employee"
+         
+           companyId: companyId,
+         
+           message: `New task assigned: ${task.name}`,
+         
+           type: "task",
+         
+           referenceId: task._id
+         });
 
     
 
@@ -385,22 +385,23 @@ const subTaskStatusChange = async (req, res) => {
 
       if(subtask?.status==="completed"){
          await recentActivity.create({title:"Task Completed.", createdBy:user?._id, createdByRole:user?.role==="admin"?"Admin":"Employee", companyId:companyId});
-         await sendNotification({
-  companyId: companyId,
-  createdBy: user?.createdBy,
-  userId:
-    user?.role === "admin"
-      ? subtask?.employeeId
-      : user?.createdBy,
+       
+  await sendNotification({
+           createdBy: user?._id,
+         
+           userId: user?.role ==="admin"?subtask?.employeeId : subtask?.createdBy,
+         
+           userModel: user?.role === "Admin" ? "Employee" : "Admin", // "Admin" or "Employee"
+         
+           companyId: companyId,
+         
+           message: `Task Completed: ${subtask.name}`,
+         
+           type: "task",
+         
+           referenceId: subtask._id
+         });
 
-  userModel: user?.role === "admin" ? "Employee" : "Admin",
-
-  message: `Task Completed: ${subtask.name}`,
-
-  type: "task",
-
-  referenceId: subtask._id
-});
 
           }
 

@@ -10,39 +10,10 @@ import ApplyLeaveDialog from '@/Forms/ApplyLeaveDialog';
 import DeleteCard from "@/components/cards/DeleteCard"
 import { useToast } from '@/hooks/use-toast';
 import { getleaveRequests,getSingleleaveRequests,  getleaveTypes, leaveDelete, leaveStatusChange } from "@/services/Service";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
-
-
-function formatDate(date: string | Date, format: string = 'MMM dd, yyyy'): string {
-  if (!date) return '';
-  const d = new Date(date);
-  if (isNaN(d.getTime())) return ''; // invalid date check
-
-  const options: Intl.DateTimeFormatOptions = {};
-
-  switch (format) {
-    case 'dd-mm-yyyy':
-      return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
-    case 'mm/dd/yyyy':
-      return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}/${d.getFullYear()}`;
-    default:
-      options.year = 'numeric';
-      options.month = 'short';
-      options.day = '2-digit';
-      return d.toLocaleDateString(undefined, options); // default "Jun 10, 2024"
-  }
-}
-
-const userNames: Record<string, string> = {
-  '3': 'Mike Williams',
-  '4': 'Emily Brown',
-  '5': 'David Lee',
-  '6': 'Lisa Chen',
-};
+import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar";
+import { useNotifications } from '@/contexts/NotificationContext';
+import {formatDate} from "@/services/allFunctions";
+import { Helmet } from "react-helmet-async";
 
 const Leave: React.FC = () => {
   const { user } = useAuth();
@@ -58,7 +29,7 @@ const Leave: React.FC = () => {
   const [leaveTypeRefresh, setLeaveTypeRefresh] = useState(false);
   const [initialData, setInitialData] = useState(null);
   const [mode, setMode] = useState(false);
-  
+   const { notifications, markAsRead, deleteNotification } = useNotifications();
 
   const handleGetleaveTypes = async () => {
     try {
@@ -99,7 +70,7 @@ const Leave: React.FC = () => {
     if (leaveTypeRefresh || leaveTypes.length === 0) {
       handleGetleaveTypes();
     }
-  }, [leaveTypeRefresh]);
+  }, [leaveTypeRefresh, notifications]);
 
   const handleDeleteClick = (leaveTypeId) => {
     setSelectedLeaveTypeId(leaveTypeId);
@@ -172,22 +143,18 @@ const Leave: React.FC = () => {
     ? allLeaveRequests.filter(req => req?.user?._id === user?._id) // sirf apna data
     : allLeaveRequests; // admin ke liye sab data
   let totalLeaves = leaveTypes?.length
- console.log(filteredRequests)
-  let usedLeaves = filteredRequests?.filter(
-    (leave) => leave?.status === "Approved"
-  ).length;
+  let usedLeaves = filteredRequests?.filter((leave) => leave?.status === "Approved").length;
 
-  let pendingLeaves = filteredRequests?.filter(
-    (leave) => leave?.status === "Pending"
-  ).length;
+  let pendingLeaves = filteredRequests?.filter( (leave) => leave?.status === "Pending").length;
 
-  let remainingLeaves = Math.max(
-    totalLeaves - usedLeaves,
-    0
-  );
-  console.log("filter:", filteredRequests);
+  let remainingLeaves = Math.max( totalLeaves - usedLeaves, 0 );
 
   return (
+    <>
+    <Helmet>
+        <title>Leave Page</title>
+        <meta name="description" content="This is the home page of our app" />
+      </Helmet>
     <div className="space-y-6">
 
       <LeaveTypeDialog
@@ -242,7 +209,7 @@ const Leave: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4 text-center">
-              <p className="text-sm text-muted-foreground">Total Leaves</p>
+              <p className="text-sm text-muted-foreground">Total Leaves Types</p>
               <p className="text-2xl font-bold">
                 {totalLeaves}
               </p>
@@ -471,6 +438,7 @@ const Leave: React.FC = () => {
       </div>
 
     </div>
+    </>
   );
 };
 

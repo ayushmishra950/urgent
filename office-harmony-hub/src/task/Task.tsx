@@ -17,6 +17,7 @@ import { getTask, taskStatusChange, reassignTask, deleteTask } from "@/services/
 import { formatDate, getStatusColor, getPriorityColor } from "@/services/allFunctions";
 import DeleteCard from "@/components/cards/DeleteCard";
 import SubTaskDetailCard from "./cards/SubTaskDetailCard";
+import { useNotifications } from "@/contexts/NotificationContext";
 
 interface TaskItem {
   id: number;
@@ -48,6 +49,8 @@ const Task: React.FC = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
+     const { notifications, markAsRead, deleteNotification } = useNotifications();
+  
 const today = new Date();
 
 const filteredTasks = taskList.filter((t) => {
@@ -120,7 +123,7 @@ const filteredTasks = taskList.filter((t) => {
   useEffect(() => {
 
     handleGetTask();
-  }, [taskListRefresh])
+  }, [taskListRefresh, notifications])
 
   const handleConfirmDelete = async () => {
     if (!selectedTaskId || (!user?.companyId?._id&& !user?.createdBy?._id) || !user?._id) return;

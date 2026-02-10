@@ -47,7 +47,14 @@ const companySchema = new mongoose.Schema({
   isActive: { 
     type: Boolean, 
     default: true 
-  }
+  },
+
+  attendanceRules: {
+  clockInTime: { type: String, default: "09:00" },   // expected clock-in
+  fullDayHours: { type: Number, default: 8 },        // hours for full day
+  halfDayHours: { type: Number, default: 4 },        // min hours for half day
+}
+
 
 }, { timestamps: true }); // 👈 createdAt & updatedAt auto
 

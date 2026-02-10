@@ -39,6 +39,8 @@ function initSocket(server) {
 
 async function sendNotification({createdBy,userId, userModel, companyId, message, type = "general", referenceId = null}) {
   if (!io) return console.error("Socket.io not initialized");
+  console.log(createdBy , userId ,userModel ,companyId ,message ,type ,referenceId, )
+  // if(!createdBy || !userId ||!userModel || !companyId || !message || !type ||  !referenceId) return {message : " required field missing."}
    
   try {
     // 1️⃣ Save in MongoDB

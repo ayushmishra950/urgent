@@ -119,7 +119,7 @@ export default function GeneratePayslipDialog({
     e.preventDefault();
     setLoading(true);
     let response = null;
-
+    console.log("hiii")
     try {
       if (isEditMode) {
         // response = await updatePayslip(obj);
@@ -267,7 +267,7 @@ export default function GeneratePayslipDialog({
               Cancel
             </Button>
             <Button
-              type="button"
+              type="submit"
               // onClick={handleSubmit}
               disabled={loading || !obj?.employeeId || !obj?.allowance || !obj?.basic || !obj?.deductions || !obj?.departmentName || !obj?.month || !obj?.year}
               className="min-w-[120px]"

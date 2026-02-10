@@ -20,16 +20,17 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
-import { getCompanys } from "@/services/Service";
+import { getCompanys, registerAdmin, updateAdmin } from "@/services/Service";
 import { useAuth } from "@/contexts/AuthContext";
 import { EyeOff, Eye, Loader2 } from "lucide-react";
+
 
 interface AdminFormDialogProps {
   open: boolean;
   setOpen: (val: boolean) => void;
   initialData?: any;
   mode?: boolean;
-  onSuccess?: () => void;
+  setadminListRefresh?: (value:boolean) => void;
 }
 
 const AdminFormDialog: React.FC<AdminFormDialogProps> = ({
@@ -37,7 +38,7 @@ const AdminFormDialog: React.FC<AdminFormDialogProps> = ({
   setOpen,
   initialData = null,
   mode = false,
-  onSuccess,
+  setadminListRefresh,
 }) => {
   const { user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
@@ -109,21 +110,15 @@ const AdminFormDialog: React.FC<AdminFormDialogProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       let res;
       if (mode === false) {
-        res = await axios.post(
-          `${import.meta.env.VITE_API_URL}/api/auth/register`,
-          { ...form, userId: user?._id }
-        );
-      } else if (mode === true && initialData?._id) {
-        res = await axios.put(
-          `${import.meta.env.VITE_API_URL}/api/auth/update/${initialData._id}`,
-          { ...form, userId: user?._id }
-        );
-      }
+        res = await registerAdmin({...form, userId:user?._id});
 
+      } else if (mode === true && initialData?._id) {
+        res = await updateAdmin(initialData?._id, {...form,superAdminId :user?._id});
+      }
+    console.log(res)
       if (res && (res.status === 200 || res.status === 201)) {
         toast({
           title: mode === false ? "Admin Created" : "Admin Updated",
@@ -131,7 +126,7 @@ const AdminFormDialog: React.FC<AdminFormDialogProps> = ({
         });
         setOpen(false);
         resetFrom();
-        onSuccess && onSuccess();
+        setadminListRefresh(true);
       }
     } catch (err: any) {
       toast({

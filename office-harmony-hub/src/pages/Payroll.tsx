@@ -5,17 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { SalarySlip } from '@/types';
 import { getAllPayRolls, getSinglePayRoll } from "@/services/Service";
 import { useToast } from '@/hooks/use-toast';
 import GeneratePayslipDialog from "@/Forms/GeneratePayslipDialog";
 import SalarySlipCard from '@/components/cards/SalarySlipCard';
+import {months} from "@/services/allFunctions";
+import { Helmet } from "react-helmet-async";
 
-const months = [
-  "January", "February", "March", "April",
-  "May", "June", "July", "August",
-  "September", "October", "November", "December"
-];
 const today = new Date();
 const todayYear = today.getFullYear();
 
@@ -65,7 +61,6 @@ const Payroll: React.FC = () => {
     );
 
     const avgSalary = Math.round(totalPayroll / allPayrolls.length);
-    console.log("All Payrolls inside stats:", allPayrolls);
     // Count unique employees
     const uniqueEmployees = new Set(allPayrolls.map(p => p.employeeId._id));
 
@@ -110,6 +105,11 @@ const Payroll: React.FC = () => {
     }
   }, [user, salarySlipRefresh]);
   return (
+    <>
+    <Helmet>
+        <title>Payroll Page</title>
+        <meta name="description" content="This is the home page of our app" />
+      </Helmet>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -391,6 +391,7 @@ const Payroll: React.FC = () => {
         </>
       )}
     </div>
+    </>
   );
 };
 

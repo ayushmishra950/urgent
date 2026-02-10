@@ -13,6 +13,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { useNotifications } from "@/contexts/NotificationContext";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -21,6 +23,10 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { unreadCount } = useNotifications();
+
+
 
   return (
     <header className="sticky top-0 z-20 bg-card border-b border-border px-4 lg:px-6 py-4">
@@ -49,12 +55,21 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           {/* Notifications */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button onClick={() => { navigate("/notifications") }} variant="ghost" size="icon" className="relative">
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
+                {unreadCount > 0 && (
+                  <span
+                    className="absolute -top-1 -right-1 min-w-[18px] h-[18px]
+                      rounded-full bg-destructive text-destructive-foreground
+                      text-xs flex items-center justify-center px-1"
+                  >
+                    {unreadCount}
+                  </span>
+                )}
+
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
+            {/* <DropdownMenuContent align="end" className="w-80">
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
@@ -69,7 +84,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
                   Your leave request has been approved
                 </span>
               </DropdownMenuItem>
-            </DropdownMenuContent>
+            </DropdownMenuContent> */}
           </DropdownMenu>
 
           {/* User menu */}
@@ -87,8 +102,8 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem className='cursor-pointer' onClick={() => { navigate("/settings") }}>Profile</DropdownMenuItem>
+              <DropdownMenuItem className='cursor-pointer' onClick={() => { navigate("/settings") }}>Settings</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-destructive cursor-pointer" onClick={logout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>

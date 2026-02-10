@@ -7,6 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AttendanceTable from "@/components/cards/AttendanceCard";
 import { useToast } from "@/hooks/use-toast";
 import { getEmployees, submitClockIn, submitClockOut } from "@/services/Service";
+import { useNotifications } from "@/contexts/NotificationContext";
+import { Helmet } from "react-helmet-async";
+
 import axios from "axios";
 const months = [
   "January", "February", "March", "April",
@@ -24,6 +27,8 @@ const Attendance: React.FC = () => {
   const [employeeList, setEmployeeList] = useState<any[]>([]);
   const [attendanceRefresh, setAttendanceRefresh] = useState(0);
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
+      const { notifications, markAsRead, deleteNotification } = useNotifications();
+  
 
   // =================== Fetch Employees ===================
   const handleGetEmployees = async () => {
@@ -61,7 +66,7 @@ const Attendance: React.FC = () => {
   useEffect(() => {
     handleGetEmployees();
     handleGetAttendances(selectedDate);
-  }, []);
+  }, [notifications]);
 
   // =================== Clock In/Out ===================
   const handleClockIn = async () => {
@@ -105,24 +110,49 @@ const Attendance: React.FC = () => {
     return attDate === todayStr && att.userId?._id === user?._id;
   });
 
-  const attendanceUIState = useMemo(() => {
-    if (!todayAttendance) return "NO_RECORD";
+  // const attendanceUIState = useMemo(() => {
+  //   if (!todayAttendance) return "NO_RECORD";
 
-    switch (todayAttendance.status) {
-      case "Clocked In":
-        return "WORKING";
-      case "Present":
-      case "Half Day":
-      case "Late":
-        return "DAY_COMPLETED";
-      case "Absent":
-        return "DAY_MISSED";
-      default:
-        return "NO_RECORD";
-    }
-  }, [todayAttendance]);
+  //   switch (todayAttendance.status) {
+  //     case "Clocked In":
+  //       return "WORKING";
+  //     case "Present":
+  //     case "Half Day":
+  //     case "Late":
+  //       return "DAY_COMPLETED";
+  //     case "Absent":
+  //       return "DAY_MISSED";
+  //     default:
+  //       return "NO_RECORD";
+  //   }
+  // }, [todayAttendance]);
+
+const attendanceUIState = useMemo(() => {
+  if (!todayAttendance) return "NO_RECORD";
+
+  // If user has clocked in but not yet clocked out
+  if (todayAttendance.clockIn && (!todayAttendance.clockOut || todayAttendance.clockOut === "-")) {
+    return "WORKING"; // show clock out button
+  }
+
+  // If user has clocked out
+  if (todayAttendance.clockOut && todayAttendance.clockOut !== "-") {
+    return "DAY_COMPLETED";
+  }
+
+  // If user never clocked in
+  if (todayAttendance.status === "Absent") return "DAY_MISSED";
+
+  return "NO_RECORD";
+}, [todayAttendance]);
+
 
   return (
+    <>
+    <Helmet>
+        <title>Attendance Page</title>
+        <meta name="description" content="This is the home page of our app" />
+      </Helmet>
     <div className="space-y-6 p-4 md:p-6">
       {/* Header */}
       <div>
@@ -187,6 +217,7 @@ const Attendance: React.FC = () => {
       {/* Attendance Table */}
       <AttendanceTable attendanceRefresh={attendanceRefresh} />
     </div>
+    </>
   );
 };
 

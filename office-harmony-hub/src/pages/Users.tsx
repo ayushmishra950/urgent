@@ -8,11 +8,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useNavigate } from 'react-router-dom';
 import { EmployeeFormDialog } from "@/Forms/EmployeeFormDialog"
 import DeleteCard from "@/components/cards/DeleteCard"
-import { getEmployees, getAdmins, handleGetPdfLetter } from "@/services/Service";
+import { getEmployees, getAdmins, handleGetPdfLetter, deleteAdmin, updateAdminStatus } from "@/services/Service";
 import { useToast } from '@/hooks/use-toast';
 import RelieveEmployeeCard from "@/components/cards/RelieveEmployeeCard"
 import AdminFormDialog from "@/Forms/AdminFormDialog";
 import AdminListCard from "@/components/cards/AdminListCard";
+import { Helmet } from "react-helmet-async";
+
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString("en-IN", {
@@ -39,6 +41,7 @@ const Users: React.FC = () => {
   const [allLetter, setAllLetter] = useState([]);
   const [showRelieve, setShowRelieve] = useState(false);
   const [adminInitialData, setAdminInitialData] = useState(null);
+  const [adminListRefresh, setadminListRefresh] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<{ name: string; url: string, type: "pdf" | "image" } | null>({
     name: "",
     url: "",
@@ -100,7 +103,7 @@ const Users: React.FC = () => {
     if(user?.role === "super_admin"){
       handleGetAdmins();
     }
-  },[user])
+  },[user, adminListRefresh])
 
 
  useEffect(() => {
@@ -119,9 +122,11 @@ const Users: React.FC = () => {
   const handleConfirmDelete = async () => {
     setIsDeleting(true);
     try {
-      // Example: Call your API here
-      // await deleteEmployeeApi(selectedEmployeeId);
-      // Show success, refresh list, etc
+         const res = await deleteAdmin(selectedEmployeeId ,user?._id);
+         if(res.status===200){
+          handleGetAdmins();
+          toast({title:"Delete Admin.", description:res.data?.message})
+         }
     } catch (error) {
       console.error(error);
     } finally {
@@ -129,6 +134,19 @@ const Users: React.FC = () => {
       setIsDeleteDialogOpen(false);
     }
   };
+
+  const handleAdminStatus = async(adminId, status) => {
+    try{
+      const res = await updateAdminStatus(adminId, user?._id, status);
+      if(res.status===200){
+        handleGetAdmins();
+        toast({title:"Admin Status:-", description:res.data?.message})
+      }
+    }
+     catch(err){
+         toast({title:"Error", description:err?.response?.data?.message, variant:"destructive"})
+     }
+  }
 
 
   const getPageTitle = () => {
@@ -201,6 +219,11 @@ const Users: React.FC = () => {
 
 
   return (
+    <>
+    <Helmet>
+        <title>{user?.role === "super_admin"?"Admin":"Employee"} Page</title>
+        <meta name="description" content="This is the home page of our app" />
+      </Helmet>
     <div className="space-y-6">
       <EmployeeFormDialog
         open={isDialogOpen}
@@ -215,7 +238,7 @@ const Users: React.FC = () => {
         setOpen={() => { setIsAdminDialog(false) }}
         mode={isEditDialogOpen}
         initialData={adminInitialData}
-        onSuccess={()=>{}}
+        setadminListRefresh={setadminListRefresh}
       />
 
       {
@@ -481,7 +504,7 @@ const Users: React.FC = () => {
       </div>
  {/* onClick={() => {setAdminInitialData(null);setIsEditDialogOpen(false);setIsAdminDialog(true); }} */}
 
-     { user?.role === "super_admin" ? <AdminListCard handleDeleteClick={handleDeleteClick} adminList={adminList} setAdminInitialData={setAdminInitialData} setIsEditDialogOpen={setIsEditDialogOpen} setIsAdminDialog={setIsAdminDialog} /> : []}
+     { user?.role === "super_admin" ? <AdminListCard handleStatusChange={handleAdminStatus} handleDeleteClick={handleDeleteClick} adminList={adminList} setAdminInitialData={setAdminInitialData} setIsEditDialogOpen={setIsEditDialogOpen} setIsAdminDialog={setIsAdminDialog} /> : []}
 
    {(
   user?.role === "super_admin"
@@ -498,6 +521,7 @@ const Users: React.FC = () => {
 
 
     </div>
+    </>
   );
 };
 

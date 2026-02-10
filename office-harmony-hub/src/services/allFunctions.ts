@@ -1,4 +1,5 @@
 
+import { LayoutDashboard, Users, Building2, FolderKanban, Clock, CalendarDays, Receipt, Wallet, Bell, BarChart3, Settings, LogOut, Briefcase } from 'lucide-react';
 
 //   date ko frontend m normal show karne k liye
 export function formatDate(isoDate, format = 'short', locale = 'en-US') {
@@ -119,3 +120,47 @@ role: "admin" | "employee" = "employee"
   }
 };
 
+
+export const months = [
+  "January", "February", "March", "April",
+  "May", "June", "July", "August",
+  "September", "October", "November", "December"
+];
+
+
+
+export interface SidebarProps {
+  isOpen: boolean;
+  onToggle: () => void;
+}
+export interface NavItem {
+  icon: React.ElementType;
+  label: string;
+  path: string;
+  roles: ('super_admin' | 'admin' | 'employee')[];
+}
+
+export const navItems: NavItem[] = [
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', roles: ['super_admin', 'admin', 'employee'] },
+  { icon: Users, label: 'Employees', path: '/users', roles: ['super_admin', 'admin'] },
+  { icon: Building2, label: 'Companies', path: '/companies', roles: ['super_admin'] },
+  { icon: Briefcase, label: 'Departments', path: '/departments', roles: ['admin'] },
+  { icon: FolderKanban, label: 'Tasks', path: '/tasks', roles: ['admin', 'employee'] },
+  { icon: Clock, label: 'Attendance', path: '/attendance', roles: ['admin', 'employee'] },
+  { icon: CalendarDays, label: 'Leave', path: '/leave', roles: ['admin', 'employee'] },
+  { icon: Receipt, label: 'Expenses', path: '/expenses', roles: ['admin'] },
+  { icon: Wallet, label: 'Payroll', path: '/payroll', roles: ['admin', 'employee'] },
+  { icon: Bell, label: 'Notifications', path: '/notifications', roles: ['super_admin', 'admin', 'employee'] },
+  { icon: BarChart3, label: 'Reports', path: '/reports', roles: ['admin'] },
+  { icon: Settings, label: 'Settings', path: '/settings', roles: ['super_admin', 'admin', 'employee'] },
+];
+
+/** Task Submenu (Admin/Super Admin Only) */
+ export const taskSubMenu = [
+  { label: 'Dashboard', path: '/tasks', roles: ["admin", "manager", "employee"] },
+  { label: 'Projects', path: '/tasks/projects', roles: ["admin"] },
+  { label: 'Tasks', path: '/tasks/task', roles: ["admin", "manager", "employee"] },
+  { label: 'Sub Tasks', path: '/tasks/sub-task', roles: ["admin", "manager"] },
+  { label: 'Overdue Tasks', path: '/tasks/overdue', roles: ["admin", "manager", "employee"] },
+  { label: "Task Manager", path: "/tasks/manager", roles: ["admin"] }
+];

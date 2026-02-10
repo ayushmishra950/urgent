@@ -1,19 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  Settings as SettingsIcon,
-  User,
-  Bell,
-  Lock,
-  Palette,
-  Globe,
-  Mail,
-  Phone,
-  Building2,
-  Calendar,
-  Save,
-} from 'lucide-react';
+import { Settings as SettingsIcon, User, Bell, Lock,Eye, EyeOff, Palette, Globe, Mail, Calendar, Save} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { getSingleUser, updateUser, updatePassword } from "@/services/Service";
 import { useToast } from '@/hooks/use-toast';
+import { Helmet } from "react-helmet-async";
 
 export function formatDate(isoDate: string | null | undefined): string {
   if (!isoDate) return "-";
@@ -48,6 +37,8 @@ const Settings: React.FC = () => {
   const [userData, setUserData] = useState<any>(null);
   const [newPassword, setNewPassword] = useState(null);
   const [confirmPassword, setConfirmPassword] = useState(null);
+   const [newPasswordShow, setNewPasswordShow] = useState(false);
+  const [confirmPasswordShow, setConfirmPasswordShow] = useState(false);
 
   const [formData, setFormData] = useState({
     username: "", // Admin
@@ -62,7 +53,6 @@ const Settings: React.FC = () => {
     const fetchUser = async () => {
       try {
         const res = await getSingleUser(user?._id, user?.role === "employee"? user?.createdBy?._id : user?.companyId?._id);
-        console.log(res)
         if (res.status === 200) {
           setUserData(res.data.user);
           if (user?.role === "admin" || user?.role === "super_admin") {
@@ -138,6 +128,8 @@ const Settings: React.FC = () => {
         const res = await updatePassword(user?._id,userData?.email, newPassword, user?.role === "employee" ? user?.createdBy?._id : user?.companyId?._id);
         if(res.status===200){
        toast({ title: `Password Changed.`, description: res?.data?.message });
+       setNewPassword("");
+       setConfirmPassword("");
         }
     }
     catch(err){
@@ -147,7 +139,13 @@ const Settings: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <>
+    <Helmet>
+        <title>Setting Page</title>
+        <meta name="description" content="This is the home page of our app" />
+      </Helmet>
+
+    <div className="space-y-6 max-w-4xl md:ml-28">
       {/* Header */}
       <div>
         <h1 className="page-header flex items-center gap-2">
@@ -212,7 +210,7 @@ const Settings: React.FC = () => {
 
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {user?.role === "admin" ? (
+            {user?.role === "admin" || user?.role === "super_admin" ? (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="username">Full Name</Label>
@@ -317,16 +315,56 @@ const Settings: React.FC = () => {
           <CardDescription>Manage your account security</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="new-password">New Password</Label>
-              <Input id="new-password" onChange={(e)=>{setNewPassword(e.target.value)}} type="password" placeholder="••••••••" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirm New Password</Label>
-              <Input id="confirm-password"onChange={(e)=>{setConfirmPassword(e.target.value)}} type="password" placeholder="••••••••" />
-            </div>
-          </div>
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  {/* New Password */}
+  <div className="space-y-2">
+    <Label htmlFor="new-password">New Password</Label>
+
+    <div className="relative">
+      <Input
+        id="new-password"
+        value={newPassword}
+        type={newPasswordShow ? "text" : "password"}
+        placeholder="••••••••"
+        onChange={(e) => setNewPassword(e.target.value)}
+        className="pr-10"
+      />
+
+      <button
+        type="button"
+        onClick={() => setNewPasswordShow((prev) => !prev)}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+      >
+        {newPasswordShow ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+    </div>
+  </div>
+
+  {/* Confirm Password */}
+  <div className="space-y-2">
+    <Label htmlFor="confirm-password">Confirm New Password</Label>
+
+    <div className="relative">
+      <Input
+        id="confirm-password"
+        value={confirmPassword}
+        type={confirmPasswordShow ? "text" : "password"}
+        placeholder="••••••••"
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        className="pr-10"
+      />
+
+      <button
+        type="button"
+        onClick={() => setConfirmPasswordShow((prev) => !prev)}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+      >
+        {confirmPasswordShow ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+    </div>
+  </div>
+</div>
+
           <Button variant="outline" disabled={!newPassword || !confirmPassword} onClick={handleUpdatePassword}>Update Password</Button>
         </CardContent>
       </Card>
@@ -367,6 +405,7 @@ const Settings: React.FC = () => {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 };
 

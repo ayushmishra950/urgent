@@ -3,6 +3,7 @@ export type UserRole = 'super_admin' | 'admin' | 'employee';
 interface CompanyDetail {
   _id: string;
   name: string;
+  logo:string;
 }
 export interface User {
   _id: string;
@@ -141,6 +142,12 @@ export interface TaskFormModalProps {
   setSubTaskListRefresh: (value: boolean) => void;
 }
 
+interface createdBy{
+  _id:string;
+  username:string;
+  fullName: string;
+}
+
 // types/notification.d.ts
 export interface Notification {
   _id: string;
@@ -151,4 +158,6 @@ export interface Notification {
   read: boolean;
   createdAt: string;
   updatedAt?: string;
+  createdBy:createdBy
 }
+

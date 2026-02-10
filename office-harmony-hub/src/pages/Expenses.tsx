@@ -13,6 +13,8 @@ import DeleteCard from "@/components/cards/DeleteCard";
 import { getExpenseCategories, getExpenses, generatePDF } from "@/services/Service";
 import axios from 'axios';
 import { useAuth } from "@/contexts/AuthContext";
+import { Helmet } from "react-helmet-async";
+
 
 const months = Array.from({ length: 12 }, (_, i) => {
   const date = new Date(0, i);
@@ -174,6 +176,11 @@ export default function Expenses() {
   };
 
   return (
+    <>
+    <Helmet>
+        <title>Expense Page</title>
+        <meta name="description" content="This is the home page of our app" />
+      </Helmet>
     <div className="space-y-4 sm:space-y-6">
       <CategoryDialog
          isOpen={isCategoryDialogOpen}
@@ -425,5 +432,6 @@ export default function Expenses() {
         ))}
       </div>
     </div>
+    </>
   );
 }

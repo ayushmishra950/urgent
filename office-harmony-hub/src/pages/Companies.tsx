@@ -1,48 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Building2,
-  Plus,
-  Search,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Mail,
-  Phone,
-  MapPin,
-  Users,
-} from 'lucide-react';
+import { Building2, Plus, Search, MoreHorizontal, Edit, Trash2, Mail, Phone, MapPin, Users} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Company } from '@/types';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from '@/components/ui/dropdown-menu';
 import CompanyFormDialog from "@/Forms/CompanyFormDialog";
 import { getCompanys } from "@/services/Service";
 import { useAuth } from "@/contexts/AuthContext";
 import axios from 'axios';
 import { useToast } from '@/hooks/use-toast';
 import DeleteCard from "@/components/cards/DeleteCard";
+import { Helmet } from "react-helmet-async";
 
-const mockCompanies: Company[] = [
-  { id: '1', name: 'TechCorp Inc.', address: '123 Silicon Valley, CA 94025', email: 'contact@techcorp.com', phone: '+1 555-0100', createdAt: '2020-01-15' },
-  { id: '2', name: 'Global Solutions Ltd.', address: '456 Business Park, NY 10001', email: 'info@globalsolutions.com', phone: '+1 555-0101', createdAt: '2019-06-20' },
-  { id: '3', name: 'Innovation Labs', address: '789 Tech Hub, TX 75001', email: 'hello@innovationlabs.com', phone: '+1 555-0102', createdAt: '2021-03-10' },
-  { id: '4', name: 'Digital Dynamics', address: '321 Cloud Street, WA 98101', email: 'support@digitaldynamics.com', phone: '+1 555-0103', createdAt: '2022-09-05' },
-];
 
 const Companies: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -115,6 +84,11 @@ const Companies: React.FC = () => {
   }, [refreshCompanyList])
 
   return (
+    <>
+    <Helmet>
+        <title>Company Page</title>
+        <meta name="description" content="This is the home page of our app" />
+      </Helmet>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -256,6 +230,7 @@ const Companies: React.FC = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

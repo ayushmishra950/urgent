@@ -5,6 +5,7 @@ const Task = require("../../models/taskModel");
 const SubTask = require("../../models/SubtaskModel");
 const { Employee } = require("../../models/employeeModel");
 const recentActivity = require("../../models/recentActivityModel");
+const {sendNotification } = require("../../socketHelpers");
 
 
 
@@ -67,6 +68,22 @@ const addProject = async (req, res) => {
     });
 
     await project.save();
+
+    await sendNotification({
+               createdBy: adminId,
+             
+               userId: company?.createdBy,
+             
+               userModel: "Admin", // "Admin" or "Employee"
+             
+               companyId: companyId || null,
+             
+               message: `New Project Created: ${project?.name} By Admin ${admin?.username}`,
+             
+               type: "project",
+             
+               referenceId: project._id
+             });
 
     return res.status(201).json({
       message: "Project created successfully.",
@@ -322,8 +339,23 @@ const projectStatusChange = async (req, res) => {
       return res.status(404).json({ message: "Project not found." });
     }
 
-      if(subTask?.status==="completed"){
-     await recentActivity.create({title:"Task Completed.", createdBy:admin?._id, createdByRole:"Admin", companyId:companyId})
+      if(status==="completed"){
+     await recentActivity.create({title:"Project Completed.", createdBy:admin?._id, createdByRole:"Admin", companyId:companyId});
+      await sendNotification({
+               createdBy: admin?._id,
+             
+               userId: company?.createdBy,
+             
+               userModel: "Admin", // "Admin" or "Employee"
+             
+               companyId: companyId || null,
+             
+               message: ` Project Completed : ${project?.name} By Admin ${admin?.username}`,
+             
+               type: "project",
+             
+               referenceId: project._id
+             });
       }
 
     return res.status(200).json({ message: "Project Status Updated Successfully." });

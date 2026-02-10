@@ -24,6 +24,7 @@ import { getDashboardData } from "@/services/Service";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate, getStatusColor, getPriorityColor, getTaskCountByStatus, getOverdueTasks } from "@/services/allFunctions";
+import { Helmet } from "react-helmet-async";
 
 // TypeScript interfaces
 interface DashboardSummary {
@@ -73,6 +74,11 @@ const TaskDashboard: React.FC = () => {
   }, [])
 
   return (
+    <>
+    <Helmet>
+        <title>Task Page</title>
+        <meta name="description" content="This is the home page of our app" />
+      </Helmet>
     <div className="flex flex-col min-h-screen bg-gray-50/50 p-6 space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -277,6 +283,7 @@ const TaskDashboard: React.FC = () => {
         </Card>:""}
       </div>
     </div>
+    </>
   );
 };
 

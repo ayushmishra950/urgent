@@ -1,161 +1,25 @@
-// import React from 'react';
-// import {
-//   Bell,
-//   FolderKanban,
-//   CalendarDays,
-//   Receipt,
-//   CheckCircle2,
-//   Clock,
-//   AlertCircle,
-// } from 'lucide-react';
-// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-// import { Button } from '@/components/ui/button';
-// import { cn } from '@/lib/utils';
-// import { Notification } from '@/types';
-
-// const mockNotifications = [
-//   { id: '1', userId: '3', title: 'New Task Assigned', message: 'You have been assigned a new high priority task: Complete project documentation', type: 'task', read: false, createdAt: '2024-01-15 10:30 AM' },
-//   { id: '2', userId: '3', title: 'Leave Request Approved', message: 'Your leave request for January 25-28 has been approved by Sarah Admin', type: 'leave', read: false, createdAt: '2024-01-15 09:15 AM' },
-//   { id: '3', userId: '3', title: 'Expense Claim Processed', message: 'Your expense claim of $150 for travel has been approved', type: 'expense', read: true, createdAt: '2024-01-14 04:45 PM' },
-//   { id: '4', userId: '3', title: 'Task Deadline Reminder', message: 'Task "Fix login bug" is due tomorrow. Please ensure timely completion.', type: 'task', read: true, createdAt: '2024-01-14 02:00 PM' },
-//   { id: '5', userId: '3', title: 'Salary Slip Available', message: 'Your salary slip for January 2024 is now available for download', type: 'general', read: true, createdAt: '2024-01-14 10:00 AM' },
-//   { id: '6', userId: '3', title: 'New Policy Update', message: 'Please review the updated remote work policy effective from February 1, 2024', type: 'general', read: true, createdAt: '2024-01-13 03:30 PM' },
-// ];
-
-// const Notifications: React.FC = () => {
-//   const getTypeIcon = (type: string) => {
-//     switch (type) {
-//       case 'task':
-//         return <FolderKanban className="w-5 h-5 text-primary" />;
-//       case 'leave':
-//         return <CalendarDays className="w-5 h-5 text-success" />;
-//       case 'expense':
-//         return <Receipt className="w-5 h-5 text-warning" />;
-//       default:
-//         return <Bell className="w-5 h-5 text-info" />;
-//     }
-//   };
-
-//   const unreadCount = mockNotifications.filter((n) => !n.read).length;
-
-//   return (
-//     <div className="space-y-6">
-//       {/* Header */}
-//       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-//         <div>
-//           <h1 className="page-header flex items-center gap-2">
-//             <Bell className="w-7 h-7 text-primary" />
-//             Notifications
-//             {unreadCount > 0 && (
-//               <span className="px-2 py-0.5 text-sm bg-destructive text-destructive-foreground rounded-full">
-//                 {unreadCount}
-//               </span>
-//             )}
-//           </h1>
-//           <p className="text-muted-foreground">Stay updated with your latest alerts and messages</p>
-//         </div>
-
-//         <Button variant="outline">Mark All as Read</Button>
-//       </div>
-
-//       {/* Notifications List */}
-//       <Card>
-//         <CardHeader>
-//           <CardTitle>All Notifications</CardTitle>
-//         </CardHeader>
-//         <CardContent>
-//           <div className="space-y-1">
-//             {mockNotifications.map((notification) => (
-//               <div
-//                 key={notification.id}
-//                 className={cn(
-//                   "flex gap-4 p-4 rounded-lg transition-colors cursor-pointer",
-//                   !notification.read ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-muted"
-//                 )}
-//               >
-//                 <div className="p-2 rounded-lg bg-card border self-start">
-//                   {getTypeIcon(notification.type)}
-//                 </div>
-//                 <div className="flex-1 min-w-0">
-//                   <div className="flex items-start justify-between gap-4">
-//                     <div>
-//                       <h3 className={cn("font-medium", !notification.read && "text-primary")}>
-//                         {notification.title}
-//                       </h3>
-//                       <p className="text-sm text-muted-foreground mt-1">{notification.message}</p>
-//                     </div>
-//                     {!notification.read && (
-//                       <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2" />
-//                     )}
-//                   </div>
-//                   <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-//                     <Clock className="w-3 h-3" />
-//                     {notification.createdAt}
-//                   </p>
-//                 </div>
-//               </div>
-//             ))}
-//           </div>
-//         </CardContent>
-//       </Card>
-
-//       {mockNotifications.length === 0 && (
-//         <div className="text-center py-12">
-//           <Bell className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-//           <p className="text-muted-foreground">No notifications yet.</p>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default Notifications;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 import React, { useEffect, useState } from "react";
-import {
-  Bell,
-  FolderKanban,
-  CalendarDays,
-  Receipt,
-  Clock,
-} from "lucide-react";
+import { Bell, FolderKanban, CalendarDays, Receipt, Clock} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import {getNotificationData} from "@/services/Service";
+import {getNotificationData, deleteNotifications, deleteAllNotifications} from "@/services/Service";
+import DeleteCard from "@/components/cards/DeleteCard";
+import { Trash } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 
 const Notifications: React.FC = () => {
  const { user } = useAuth();
   const { toast } = useToast();
     const { notifications, markAsRead, deleteNotification } = useNotifications();
-  const[notificationList, setNotificationList] = useState([])
+  const[notificationList, setNotificationList] = useState([]);
+   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedNotificationId, setSelectedNotificationId] = useState(null);
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -170,9 +34,69 @@ const Notifications: React.FC = () => {
     }
   };
 
+  useEffect(()=>{
+    if(notifications){
+      setNotificationList(prev => [notifications, ...prev]);
+    }
+  },[notifications]);
+
+ const handleConfirmDelete = async () => {
+  setIsDeleting(true);
+  try {
+    const companyId = user?.companyId?._id ?? user?.createdBy?._id;
+   if(user && user?.role!=="super_admin")
+   {
+ if (!user?._id) {
+      throw new Error("User not found");
+    }
+
+    if (!companyId) {
+      throw new Error("Company not found");
+    }
+   }
+   
+
+    let res;
+
+    if (!selectedNotificationId) {
+      // delete all notifications
+      res = await deleteAllNotifications(user._id, companyId);
+    } else {
+      // delete single notification
+      res = await deleteNotifications(
+        selectedNotificationId,
+        user._id,
+        companyId
+      );
+    }
+
+    if (res?.status === 200) {
+      handleGetNotificationData();
+      toast({
+        title: "Notification Deleted",
+        description: res?.data?.message,
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    toast({
+      title: "Error",
+      description:
+        error?.response?.data?.message ||
+        error?.message ||
+        "Something went wrong",
+        variant:"destructive"
+    });
+  } finally {
+    setIsDeleting(false);
+    setIsDeleteDialogOpen(false);
+  }
+};
+
+
   const handleGetNotificationData = async()=>{
       try{
-           if(!user?._id || (!user?.companyId?._id && !user?.createdBy?._id)) return toast({title:"Error", description:"required field Missing.", variant:"destructive"});
+          if(user && user?.role !== "super_admin") {if(!user?._id || (!user?.companyId?._id && !user?.createdBy?._id)) return toast({title:"Error", description:"required field Missing.", variant:"destructive"});}
            const res = await getNotificationData(user?._id, user?.companyId?._id || user?.createdBy?._id);
            console.log(res);
            if(res.status===200){
@@ -183,7 +107,8 @@ const Notifications: React.FC = () => {
          console.error(error);
       toast({
         title: "Error",
-        description: error?.response?.data?.message || "Something went wrong",
+        description: error?.response?.data?.message || error?.response?.data || "Something went wrong",
+        variant:"destructive"
       });
       }
   }
@@ -194,6 +119,20 @@ const Notifications: React.FC = () => {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
+    <>
+    <Helmet>
+        <title>Notification Page</title>
+        <meta name="description" content="This is the home page of our app" />
+      </Helmet>
+
+      <DeleteCard
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+        title={selectedNotificationId?"Delete  Notification Message?" : "Delete All Notification Message?"}
+        message={selectedNotificationId?`This Action Will Permanently Delete This Notification Message.`: `This Action Will Permanently Delete All Notification Message.`}
+      />
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -214,13 +153,11 @@ const Notifications: React.FC = () => {
 
         <Button
           variant="outline"
-          onClick={() =>
-            notifications.forEach((n) => {
-              if (!n.read) markAsRead(n._id);
-            })
-          }
+          onClick={() =>{setIsDeleteDialogOpen(true)}}
+
         >
-          Mark All as Read
+          <Trash size={18} className="text-red-500"/>
+          All Deleted
         </Button>
       </div>
 
@@ -277,9 +214,9 @@ const Notifications: React.FC = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => deleteNotification(notification._id)}
+                      onClick={() =>{ setSelectedNotificationId(notification?._id); setIsDeleteDialogOpen(true)}}
                     >
-                      Delete
+                    <Trash size={18} className="text-red-500" />
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
@@ -293,6 +230,7 @@ const Notifications: React.FC = () => {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 };
 

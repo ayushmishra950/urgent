@@ -36,8 +36,10 @@ const AdminSchema = new mongoose.Schema(
     companyId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Company",
-      required: true,
+      // required: true,
     },
+
+    isActive: {type:Boolean, default: true}
   },
   { timestamps: true } // adds createdAt and updatedAt
 );

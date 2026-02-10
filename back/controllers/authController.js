@@ -15,6 +15,7 @@ const mongoose = require("mongoose")
 const PayRoll = require("../models/payRollModel");
 const Department = require("../models/departmentModel.js");
 const Notification = require("../models/NotificationModel"); // Notification model
+const recentActivity = require("../models/recentActivityModel.js");
 
 
 // ---------------- Register Admin ----------------
@@ -65,6 +66,8 @@ const registerAdmin = async (req, res) => {
     company.admins = newAdmin._id;
     await company.save();
 
+    await recentActivity.create({title:`New Admin Added.`, createdBy:userId, createdByRole:"Admin", companyId:companyId});
+
     return res.status(201).json({
       message: "Admin registered successfully",
       user: {
@@ -86,8 +89,8 @@ const registerAdmin = async (req, res) => {
 // ---------------- Update Admin ----------------
 const updateAdmin = async (req, res) => {
   try {
-    const adminId = req.params.id; // admin to update
-    const superAdminId = req.userId;
+    const {id:adminId} = req.params;
+    const { username, email, password, companyId, role, mobile, address, superAdminId } = req.body;
 
     // Superadmin check
     const superAdmin = await Admin.findById(superAdminId);
@@ -98,7 +101,6 @@ const updateAdmin = async (req, res) => {
     const adminToUpdate = await Admin.findById(adminId);
     if (!adminToUpdate) return res.status(404).json({ message: "Admin not found" });
 
-    const { username, email, password, companyId, role, mobile, address } = req.body;
 
     // Check if new companyId is already assigned to another admin
     if (companyId && companyId !== adminToUpdate.companyId.toString()) {
@@ -137,12 +139,35 @@ const updateAdmin = async (req, res) => {
   }
 };
 
+const adminStatusChange = async(req,res) => {
+  try{
+     const {adminId, superAdminId, status} = req.body;
+
+        const superAdmin = await Admin.findById(superAdminId);
+
+    if (!superAdmin || superAdmin.role !== "super_admin") {
+      return res.status(403).json({ message: "Unauthorized. Only superadmins can delete admins." });
+    }
+   
+       const admin = await Admin.updateOne({_id:adminId},{$set: {isActive:status}});
+    if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+    
+
+    return res.status(200).json({ message: `Admin ${status?"Active": "In-Active"} successfully.` });
+  }
+  catch(err){
+ console.error(err);
+    return res.status(500).json({ message: `Server error = ${err?.message}` });
+  }
+}
+
 
 // ---------------- Delete Admin ----------------
 const deleteAdmin = async (req, res) => {
   try {
-    const adminId = req.params.id; // admin to delete
-    const superAdminId = req.userId;
+
+    const {id:adminId, userId:superAdminId} = req.query;
 
     // Superadmin check
     const superAdmin = await Admin.findById(superAdminId);
@@ -158,7 +183,7 @@ const deleteAdmin = async (req, res) => {
     return res.status(200).json({ message: "Admin deleted successfully" });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: `Server error = ${err?.message}` });
   }
 };
 
@@ -179,7 +204,7 @@ const loginAdmin = async (req, res) => {
      * 1️⃣ Try Admin login
      */
     user = await Admin.findOne({ email })
-      .populate("companyId", "name")
+      .populate("companyId", "name logo")
       .select("+password");
 
     if (user) {
@@ -189,7 +214,7 @@ const loginAdmin = async (req, res) => {
        * 2️⃣ Try Employee login
        */
       user = await Employee.findOne({ email })
-        .populate("createdBy", "name")
+        .populate("createdBy", "name logo")
         .select("+password");
       if (user) role = user?.role || "employee";
     }
@@ -224,6 +249,9 @@ const loginAdmin = async (req, res) => {
     delete userData.password;
       console.log(userData)
 
+    await recentActivity.create({title: `Welcome, ${user?.username || user?.fullName}`, createdBy:user?.id, createdByRole:user?.role==="admin"?"Admin":"Employee", companyId:user?.companyId || user?.createdBy || null});
+
+
     return res.status(200).json({
       message: "Login successful",
       token,
@@ -238,59 +266,58 @@ const loginAdmin = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
-
 const getUserById = async (req, res) => {
   try {
-    const { companyId, userId } = req.query; // ya req.query / req.params (jo frontend se bhejo)
-
-    // 1️⃣ Check company exists
-    const company = await Company.findById(companyId);
-    if (!company) {
-      return res.status(404).json({ message: "Company not found" });
+    const { companyId, userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ message: "userId is required" });
     }
 
     let user = null;
     let role = "";
 
-    // 2️⃣ Check Admin with userId + companyId
-    user = await Admin.findOne({
-      _id: userId,
-      companyId: companyId, // ya createdBy.companyId
-    })
-      .select("-password")
-      .populate("companyId", "name _id");
+    // ===== Check Admin first =====
+    user = await Admin.findById(userId).select("-password");
 
     if (user) {
-      role = user?.role || "admin";
-    }
+      role = user.role || "admin";
 
-    // 3️⃣ If not Admin, check Employee
-    if (!user) {
-      user = await Employee.findOne({
-        _id: userId,
-        createdBy: companyId, // ya createdBy.companyId
-      })
-        .select("-password")
-        .populate("createdBy", "name _id");
-
-      if (user) {
-        role = user?.role || "employee";
+      // If Super Admin, skip company check and populate
+      if (role === "super_admin") {
+        return res.status(200).json({ user, role });
       }
+
+      // Admin but not superAdmin → check company
+      if (!companyId || user.companyId.toString() !== companyId) {
+        return res.status(404).json({ message: "Admin not found for this company" });
+      }
+
+      // Populate company for normal admin
+      await user.populate("companyId", "name _id");
+      return res.status(200).json({ user, role });
     }
 
-    // 4️⃣ If still not found
-    if (!user) {
-      return res
-        .status(404)
-        .json({ message: "User not found for this company" });
+    // ===== If not Admin, check Employee =====
+    if (!companyId) {
+      return res.status(400).json({ message: "companyId is required for Employee" });
     }
 
-    res.status(200).json({ user, role });
+    user = await Employee.findOne({ _id: userId, createdBy: companyId })
+      .select("-password")
+      .populate("createdBy", "name _id");
+
+    if (user) {
+      role = user.role || "employee";
+      return res.status(200).json({ user, role });
+    }
+
+    return res.status(404).json({ message: "User not found for this company" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 };
+
 
 
 // ---------------- Get All Admins ----------------
@@ -366,6 +393,9 @@ const updateUser = async (req, res) => {
     // 3️⃣ Save updated user
     const updatedUser = await user.save();
 
+    await recentActivity.create({title: `Profile Updated.`, createdBy:user?.id, createdByRole:user?.role==="admin"?"Admin":"Employee", companyId:user?.companyId || user?.createdBy || null});
+
+
     res.status(200).json({
       message: `${modelName} updated successfully`,
       user: updatedUser,
@@ -376,60 +406,93 @@ const updateUser = async (req, res) => {
   }
 };
 
-
 const changePassword = async (req, res) => {
   try {
     const { userId, email, newPassword, companyId } = req.body;
 
-    if (!userId || !email || !newPassword || !companyId) {
+    if (!userId || !email || !newPassword) {
       return res.status(400).json({
-        message: "userId, email, newPassword and companyId are required",
+        message: "userId, email and newPassword are required",
       });
-    }
-
-    // 1️⃣ Validate company
-    const company = await Company.findById(companyId);
-    if (!company) {
-      return res.status(404).json({ message: "Invalid companyId" });
     }
 
     let user = null;
     let role = "";
 
-    // 2️⃣ Check Admin
-    user = await Admin.findOne({ _id : userId, email, companyId });
+    // 🔥 1️⃣ Check Super Admin FIRST (no company check)
+    user = await Admin.findOne({
+      _id: userId,
+      email,
+      role: "super_admin",
+    });
+
     if (user) {
-      role = user?.role || "Admin";
+      role = "super_admin";
     } else {
-      // 3️⃣ Check Employee
-      user = await Employee.findOne({
-        _id : userId,
-        email,
-        createdBy: companyId,
-      });
-      if (!user) {
-        return res.status(404).json({
-          message: "User not found in this company",
+      // ❗ companyId is required only for admin / employee
+      if (!companyId) {
+        return res.status(400).json({
+          message: "companyId is required",
         });
       }
-      role = user?.role || "Employee";
+
+      // 2️⃣ Validate company
+      const company = await Company.findById(companyId);
+      if (!company) {
+        return res.status(404).json({ message: "Invalid companyId" });
+      }
+
+      // 3️⃣ Check Admin
+      user = await Admin.findOne({ _id: userId, email, companyId });
+
+      if (user) {
+        role = user?.role || "Admin";
+      } else {
+        // 4️⃣ Check Employee
+        user = await Employee.findOne({
+          _id: userId,
+          email,
+          createdBy: companyId,
+        });
+
+        if (!user) {
+          return res.status(404).json({
+            message: "User not found",
+          });
+        }
+
+        role = user?.role || "Employee";
+      }
     }
 
-    // 4️⃣ Hash new password
+    // 5️⃣ Hash new password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
     user.password = hashedPassword;
     await user.save();
 
+    // 6️⃣ Recent Activity
+    await recentActivity.create({
+      title: "Password Updated",
+      createdBy: user._id,
+      createdByRole:
+        role === "admin"|| role==="super_admin" ? "Admin" : "Employee",
+      companyId: role === "super_admin" ? null : user.companyId || user.createdBy,
+    });
+
     res.status(200).json({
       message: `${role} password updated successfully`,
     });
   } catch (err) {
     console.error("Change Password Error:", err);
-    res.status(500).json({ message: `Server error:= ${err?.message}` });
+    res.status(500).json({
+      message: "Server error",
+      error: err?.message,
+    });
   }
 };
+
 
 const getDashboardSummary = async (req, res) => {
   try {
@@ -732,7 +795,7 @@ const analyticsReport = async (req, res) => {
     };
 
     // ====== Department-wise analytics ======
-    const departments = await Department.find({ companyId });
+    const departments = await Department.find({ createdBy: companyId });
 
     const departmentAnalytics = await Promise.all(
       departments.map(async (dept) => {
@@ -795,53 +858,221 @@ const analyticsReport = async (req, res) => {
 };
 
 
-const getNotificationData = async(req,res) =>{
-  try{
-      const { userId,companyId } = req.query;
+// const getNotificationData = async(req,res) =>{
+//   try{
+//       const { userId,companyId } = req.query;
 
-    if (!userId || !companyId) {
+//     if (!userId || !companyId) {
+//       return res.status(400).json({
+//         message: "userId, companyId are required",
+//       });
+//     }
+
+//     // 1️⃣ Validate company
+//     const company = await Company.findById(companyId);
+//     if (!company) {
+//       return res.status(404).json({ message: "Invalid companyId" });
+//     }
+
+//     let user = null;
+//     let role = "";
+
+//     // 2️⃣ Check Admin
+//     user = await Admin.findOne({ _id : userId, companyId });
+//     if (user) {
+//       role = user?.role || "Admin";
+//     } else {
+//       // 3️⃣ Check Employee
+//       user = await Employee.findOne({
+//         _id : userId,
+//         createdBy: companyId,
+//       });
+//       if (!user) {
+//         return res.status(404).json({
+//           message: "User not found in this company",
+//         });
+//       }
+//       role = user?.role || "Employee";
+//     }
+   
+//     const notification = await Notification.find({companyId, userId}).populate("createdBy");
+
+//     res.status(200).json({notification, success:true, message:"successfully."})
+
+//   }
+//   catch (err) {
+//     console.error("Analytics Error:", err);
+//     return res.status(500).json({ message: "Server error", error: err.message });
+//   }
+// };
+
+
+
+
+
+const getNotificationData = async (req, res) => {
+  try {
+    const { userId, companyId } = req.query;
+
+    if (!userId) {
       return res.status(400).json({
-        message: "userId, companyId are required",
+        message: "userId is required",
       });
-    }
-
-    // 1️⃣ Validate company
-    const company = await Company.findById(companyId);
-    if (!company) {
-      return res.status(404).json({ message: "Invalid companyId" });
     }
 
     let user = null;
     let role = "";
 
-    // 2️⃣ Check Admin
-    user = await Admin.findOne({ _id : userId, companyId });
+    // 1️⃣ Check Admin
+    user = await Admin.findById(userId);
     if (user) {
       role = user?.role || "Admin";
     } else {
-      // 3️⃣ Check Employee
-      user = await Employee.findOne({
-        _id : userId,
-        createdBy: companyId,
-      });
+      // 2️⃣ Check Employee
+      user = await Employee.findById(userId);
       if (!user) {
         return res.status(404).json({
-          message: "User not found in this company",
+          message: "User not found",
         });
       }
       role = user?.role || "Employee";
     }
-   
-    const notification = await Notification.find({companyId, userId}).populate("createdBy");
 
-    res.status(200).json({notification, success:true, message:"successfully."})
+    // 3️⃣ If not super admin, validate company
+    let validCompanyId = companyId;
+    if (role !== "super_admin") {
+      if (!companyId) {
+        return res.status(400).json({
+          message: "companyId is required for admin/employee",
+        });
+      }
 
-  }
-  catch (err) {
-    console.error("Analytics Error:", err);
+      const company = await Company.findById(companyId);
+      if (!company) {
+        return res.status(404).json({ message: "Invalid companyId" });
+      }
+
+      // Optional: Extra check to ensure user belongs to this company
+      if (
+        (role === "Admin" && user.companyId.toString() !== companyId) ||
+        (role === "Employee" && user.createdBy.toString() !== companyId)
+      ) {
+        return res.status(403).json({ message: "User does not belong to this company" });
+      }
+    } else {
+      // For super admin, company check is skipped
+      validCompanyId = null; // ignore companyId
+    }
+
+    // 4️⃣ Fetch notifications
+    const notificationQuery = { userId };
+    if (validCompanyId) notificationQuery.companyId = validCompanyId;
+
+    const notification = await Notification.find(notificationQuery).populate("createdBy");
+
+    res.status(200).json({ notification, success: true, message: "successfully." });
+  } catch (err) {
+    console.error("Notification Error:", err);
     return res.status(500).json({ message: "Server error", error: err.message });
   }
-}
+};
+
+
+
+
+// Delete single notification
+const deleteNotifications = async (req, res) => {
+  try {
+    const { id, userId, companyId } = req.query;
+
+    if (!userId) return res.status(400).json({ message: "userId is required" });
+    if (!id) return res.status(400).json({ message: "Notification id is required" });
+
+    let user = await Admin.findById(userId);
+    let role = "";
+    if (user) {
+      role = user.role || "admin";
+    } else {
+      user = await Employee.findById(userId);
+      if (!user) return res.status(404).json({ message: "User Not Found." });
+      role = user.role || "employee";
+    }
+
+    let filter= { _id: id, userId };
+
+    if (role !== "super_admin") {
+      // Company validation only for admin/employee
+      if (!companyId) return res.status(400).json({ message: "companyId is required for admin/employee" });
+
+      const company = await Company.findById(companyId);
+      if (!company) return res.status(404).json({ message: "Company Not Found." });
+
+      // Ensure user belongs to this company
+      if (
+        (role === "admin" && user.companyId.toString() !== companyId) ||
+        (role === "employee" && user.createdBy.toString() !== companyId)
+      ) {
+        return res.status(403).json({ message: "User does not belong to this company" });
+      }
+
+      filter.companyId = companyId;
+    }
+
+    const notification = await Notification.findOneAndDelete(filter);
+
+    if (!notification) return res.status(404).json({ message: "Notification Message Not Found." });
+
+    res.status(200).json({ message: "Notification Message Deleted Successfully." });
+  } catch (err) {
+    console.error("Notification Error:", err);
+    return res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+// Delete all notifications
+const deleteAllNotifications = async (req, res) => {
+  try {
+    const { userId, companyId } = req.query;
+
+    if (!userId) return res.status(400).json({ message: "userId is required" });
+
+    let user = await Admin.findById(userId);
+    let role = "";
+    if (user) {
+      role = user.role || "admin";
+    } else {
+      user = await Employee.findById(userId);
+      if (!user) return res.status(404).json({ message: "User Not Found." });
+      role = user.role || "employee";
+    }
+
+    let filter = { userId };
+
+    if (role !== "super_admin") {
+      if (!companyId) return res.status(400).json({ message: "companyId is required for admin/employee" });
+
+      const company = await Company.findById(companyId);
+      if (!company) return res.status(404).json({ message: "Company Not Found." });
+
+      if (
+        (role === "admin" && user.companyId.toString() !== companyId) ||
+        (role === "employee" && user.createdBy.toString() !== companyId)
+      ) {
+        return res.status(403).json({ message: "User does not belong to this company" });
+      }
+
+      filter.companyId = companyId;
+    }
+
+    const notification = await Notification.deleteMany(filter);
+
+    res.status(200).json({ message: "All Notification Messages Deleted Successfully." });
+  } catch (err) {
+    console.error("Notification Error:", err);
+    return res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
 
 
 // Export
@@ -856,5 +1087,8 @@ module.exports = {
   changePassword,
   getDashboardSummary,
   analyticsReport,
-  getNotificationData
+  getNotificationData,
+  deleteNotifications,
+  deleteAllNotifications,
+  adminStatusChange
 };

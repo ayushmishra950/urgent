@@ -1,23 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import StatCard from '@/components/dashboard/StatCard';
-import {
-  Users,
-  Building2,
-  FolderKanban,
-  Clock,
-  CalendarDays,
-  Receipt,
-  TrendingUp,
-  CheckCircle2,
-  AlertCircle,
-  Timer,
-} from 'lucide-react';
+import { Users, Building2, FolderKanban, Clock, CalendarDays, Receipt, TrendingUp, CheckCircle2, AlertCircle, Timer} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {getDashboardPage} from "@/services/Service";
 import { useToast } from '@/hooks/use-toast';
 import {formatDate} from "@/services/allFunctions";
+import { Helmet } from "react-helmet-async";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -36,20 +25,6 @@ const Dashboard: React.FC = () => {
         return 'Dashboard';
     }
   };
-
-  const recentTasks = [
-    { id: 1, title: 'Complete project proposal', status: 'in_progress', priority: 'high', deadline: '2024-01-20' },
-    { id: 2, title: 'Review team performance', status: 'pending', priority: 'medium', deadline: '2024-01-22' },
-    { id: 3, title: 'Update documentation', status: 'completed', priority: 'low', deadline: '2024-01-18' },
-    { id: 4, title: 'Client meeting preparation', status: 'pending', priority: 'urgent', deadline: '2024-01-19' },
-  ];
-
-  const recentActivities = [
-    { id: 1, action: 'Task completed', user: 'Sarah Admin', time: '2 hours ago' },
-    { id: 2, action: 'Leave approved', user: 'John Super Admin', time: '4 hours ago' },
-    { id: 3, action: 'Expense submitted', user: 'Mike Employee', time: '5 hours ago' },
-    { id: 4, action: 'New employee added', user: 'Sarah Admin', time: '1 day ago' },
-  ];
 
   const getPriorityBadge = (priority: string) => {
     const styles: Record<string, string> = {
@@ -94,6 +69,12 @@ const Dashboard: React.FC = () => {
   },[])
 
   return (
+    <>
+    <Helmet>
+        <title>Dashboard Page</title>
+        <meta name="description" content="This is the home page of our app" />
+      </Helmet>
+
     <div className="space-y-6">
       {/* Header */}
       <div>
@@ -209,7 +190,7 @@ const Dashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {dashboardData?.recentTasks?.map((task) => (
+              {dashboardData?.recentTasks?.slice(0,5)?.map((task) => (
                 <div
                   key={task._id}
                   className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
@@ -247,7 +228,7 @@ const Dashboard: React.FC = () => {
 
                 </>
                 :
-              dashboardData?.recentActivity?.map((activity) => (
+              dashboardData?.recentActivity?.slice(0,5)?.map((activity) => (
                 <div
                   key={activity?._id}
                   className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors"
@@ -295,6 +276,9 @@ const Dashboard: React.FC = () => {
         </Card>
       )}
     </div>
+
+   
+    </>
   );
 };
 

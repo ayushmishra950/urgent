@@ -1,7 +1,7 @@
 
 const express = require("express");
 const { registerAdmin, updateAdmin, deleteAdmin, loginAdmin,getUserById, updateUser,changePassword,
-  getAllAdmins, getDashboardSummary, analyticsReport, getNotificationData } = require("../controllers/authController");
+  getAllAdmins, adminStatusChange, getDashboardSummary, analyticsReport, getNotificationData, deleteNotifications, deleteAllNotifications } = require("../controllers/authController");
 
 const router = express.Router();
 
@@ -84,7 +84,7 @@ router.post("/register", registerAdmin);
  */
 router.post("/login", loginAdmin);
 router.put("/update/:id", updateAdmin);
-router.delete("/delete/:id", deleteAdmin);
+router.delete("/delete", deleteAdmin);
 router.get("/get/:id", getAllAdmins);
 router.get("/getbyid", getUserById)
 router.patch("/updateuser", updateUser);
@@ -92,6 +92,9 @@ router.post("/updatepassword", changePassword);
 router.get("/dashboardsummary", getDashboardSummary);
 router.get("/report", analyticsReport);
 router.get("/notification", getNotificationData);
+router.delete("/notification/delete", deleteNotifications);
+router.delete("/notification/alldelete", deleteAllNotifications);
+router.put("/admin/status", adminStatusChange);
 
 
 
