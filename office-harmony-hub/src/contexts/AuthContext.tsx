@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { User, UserRole } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import {loginUser} from "@/services/Service";
+
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string, role?: UserRole) => Promise<void>; // role optional
@@ -34,9 +35,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           title: "Login Successfully.",
           description: `${res?.data?.message}`,
         });
-        localStorage.setItem('token', res?.data.token);
-        localStorage.setItem('user', JSON.stringify(res?.data.user));
-        setUser(res?.data.user);
+        localStorage.setItem('accessToken', res?.data?.accessToken);
+        localStorage.setItem('user', JSON.stringify(res?.data?.user));
+        setUser(res?.data?.user);
     }
     else{
       toast({

@@ -1,35 +1,47 @@
 const jwt = require("jsonwebtoken");
+const {Admin} = require("../models/authModel");
+const {Employee} = require("../models/employeeModel");
 
-const JWT_SECRET = process.env.JWT_SECRET || "secret_key";
-
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
-    // Header se token lo
     const authHeader = req.headers.authorization;
 
-    // Check header exists or not
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({
-        message: "Access denied. No token provided"
-      });
+      return res.status(401).json({ message: "No token provided" });
     }
 
-    // Bearer TOKEN_VALUE
     const token = authHeader.split(" ")[1];
 
-    // Verify token
-    const decoded = jwt.verify(token, JWT_SECRET);
+    // 🔐 Verify Access Token
+    const decoded = jwt.verify(
+      token,
+      process.env.ACCESS_TOKEN_SECRET
+    );
 
-    // Attach user/admin info to request
-    req.user = decoded;
+    // 🔍 Find user (Admin or Employee)
+    let user =
+      await Admin.findById(decoded.id).populate("companyId", "name logo") ||
+      await Employee.findById(decoded.id).populate("createdBy", "name logo");
 
-    next(); // allow request
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    req.user = {
+      id: user._id,
+      role: decoded.role,
+      companyId: decoded.companyId || null,
+    };
+
+    next();
+
   } catch (error) {
-    console.error(error);
-    return res.status(401).json({
-      message: "Invalid or expired token"
-    });
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({ message: "Access token expired" });
+    }
+
+    return res.status(403).json({ message: "Invalid token" });
   }
 };
 
-module.exports = {authMiddleware};
+module.exports = authMiddleware;

@@ -39,7 +39,8 @@ const AdminSchema = new mongoose.Schema(
       // required: true,
     },
 
-    isActive: {type:Boolean, default: true}
+    isActive: {type:Boolean, default: true},
+    refreshToken:{type:String, default:null},
   },
   { timestamps: true } // adds createdAt and updatedAt
 );

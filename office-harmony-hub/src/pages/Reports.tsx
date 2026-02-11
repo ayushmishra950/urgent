@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BarChart3, Users, Clock, Receipt, Wallet, TrendingUp, Download, Calendar} from 'lucide-react';
+import { BarChart3, Users, Clock, Receipt, Wallet, TrendingUp,ArrowLeft, Download, Calendar} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell} from 'recharts';
 import {getAnalyticsReportPage} from "@/services/Service";
@@ -65,6 +65,14 @@ const departmentPerformance = analyticsData?.departmentAnalytics?.map((v)=>{
         <title>Report Page</title>
         <meta name="description" content="This is the home page of our app" />
       </Helmet>
+        <div className="mb-4">
+                          <button
+                            onClick={() => window.history.back()}
+                            className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+                          >
+                            <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
+                          </button>
+                        </div>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

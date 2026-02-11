@@ -142,6 +142,7 @@ const employeeSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    refreshToken: String
   },
   {
     timestamps: true, // createdAt, updatedAt

@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import MainLayout from "@/components/layout/MainLayout";
 import Login from "@/pages/Login";
@@ -28,6 +28,16 @@ import OverdueTask from "./task/OverDue-Task";
 import TaskManager from "./task/TaskManager";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 
+// global.d.ts
+export {};
+
+declare global {
+  interface Window {
+    reactRouterNavigate?: (path: string) => void;
+  }
+}
+
+
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -37,6 +47,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+   window.reactRouterNavigate = navigate;
 
   return (
     <Routes>

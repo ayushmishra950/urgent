@@ -1,6 +1,6 @@
 
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Search, Trash2, Download, Filter, Edit, Eye, X, Loader2 } from 'lucide-react';
+import { Plus, Search, Trash2, Download, Filter, Edit, Eye, X,ArrowLeft, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -206,6 +206,15 @@ export default function Expenses() {
         title="Delete Expense?"
         message="This Action Will permanently Delete This Expense."
       />
+
+       <div className="mb-4">
+              <button
+                onClick={() => window.history.back()}
+                className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
+              </button>
+            </div>
 
       <Card className="shadow-md">
         <CardHeader className="pb-3 sm:pb-4">

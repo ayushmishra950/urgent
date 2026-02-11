@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Wallet, Download, Search, Calendar, DollarSign, TrendingUp, FileText, Plus } from 'lucide-react';
+import { Wallet, Download, Search, Calendar, DollarSign, TrendingUp,ArrowLeft,  FileText, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -110,6 +110,15 @@ const Payroll: React.FC = () => {
         <title>Payroll Page</title>
         <meta name="description" content="This is the home page of our app" />
       </Helmet>
+
+       <div className="mb-4">
+                    <button
+                      onClick={() => window.history.back()}
+                      className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+                    >
+                      <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
+                    </button>
+                  </div>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

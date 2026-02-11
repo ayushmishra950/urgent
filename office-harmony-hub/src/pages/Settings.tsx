@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Settings as SettingsIcon, User, Bell, Lock,Eye, EyeOff, Palette, Globe, Mail, Calendar, Save} from 'lucide-react';
+import { Settings as SettingsIcon, User, Bell, Lock,Eye, EyeOff,ArrowLeft, Palette, Globe, Mail, Calendar, Save} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -144,6 +144,14 @@ const Settings: React.FC = () => {
         <title>Setting Page</title>
         <meta name="description" content="This is the home page of our app" />
       </Helmet>
+       <div className="mb-4">
+                          <button
+                            onClick={() => window.history.back()}
+                            className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+                          >
+                            <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
+                          </button>
+                        </div>
 
     <div className="space-y-6 max-w-4xl md:ml-28">
       {/* Header */}

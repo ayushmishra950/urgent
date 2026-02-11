@@ -1,7 +1,7 @@
 
 const express = require("express");
 const { registerAdmin, updateAdmin, deleteAdmin, loginAdmin,getUserById, updateUser,changePassword,
-  getAllAdmins, adminStatusChange, getDashboardSummary, analyticsReport, getNotificationData, deleteNotifications, deleteAllNotifications } = require("../controllers/authController");
+  getAllAdmins, adminStatusChange,refresh, getDashboardSummary, analyticsReport, getNotificationData, deleteNotifications, deleteAllNotifications } = require("../controllers/authController");
 
 const router = express.Router();
 
@@ -83,6 +83,7 @@ router.post("/register", registerAdmin);
  *         description: Server error
  */
 router.post("/login", loginAdmin);
+router.post("/refreshtoken", refresh);
 router.put("/update/:id", updateAdmin);
 router.delete("/delete", deleteAdmin);
 router.get("/get/:id", getAllAdmins);

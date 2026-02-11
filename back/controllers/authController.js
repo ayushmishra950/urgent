@@ -1,11 +1,9 @@
 const { Admin } = require("../models/authModel.js");
 const bcrypt = require("bcrypt");
-const { generateToken } = require("../utils/token.js");
 const { Employee } = require("../models/employeeModel.js"); // adjust path if needed
 const Company = require("../models/companyModel");
 const { Expense } = require("../models/expenseModel.js");
 const { LeaveRequest } = require("../models/leaveRequestModel");
-const { Leave } = require("../models/leaveModel");
 const Attendance = require("../models/attendanceModel");
 const Task = require("../models/taskModel");
 const SubTask = require("../models/SubtaskModel");
@@ -16,7 +14,7 @@ const PayRoll = require("../models/payRollModel");
 const Department = require("../models/departmentModel.js");
 const Notification = require("../models/NotificationModel"); // Notification model
 const recentActivity = require("../models/recentActivityModel.js");
-
+const {generateAccessToken, generateRefreshToken} = require("../service/service.js")
 
 // ---------------- Register Admin ----------------
 
@@ -188,6 +186,89 @@ const deleteAdmin = async (req, res) => {
 };
 
 // ---------------- Login Admin ----------------
+// const loginAdmin = async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+//     console.log(req.body)
+
+//     if (!email || !password) {
+//       return res.status(400).json({ message: "Email and password are required" });
+//     }
+
+//     let user = null;
+//     let role = null;
+
+//     /**
+//      * 1️⃣ Try Admin login
+//      */
+//     user = await Admin.findOne({ email })
+//       .populate("companyId", "name logo")
+//       .select("+password");
+
+//     if (user) {
+//       role = user?.role || "admin";
+//     } else {
+//       /**
+//        * 2️⃣ Try Employee login
+//        */
+//       user = await Employee.findOne({ email })
+//         .populate("createdBy", "name logo")
+//         .select("+password");
+//       if (user) role = user?.role || "employee";
+//     }
+//     console.log(user)
+
+//     if (!user) {
+//       return res.status(400).json({ message: "Invalid email" });
+//     }
+
+//     /**
+//      * 3️⃣ Password check
+//      */
+//     const isMatch = await bcrypt.compare(password, user.password);
+//     if (!isMatch) {
+//       return res.status(400).json({ message: "Invalid password" });
+//     }
+//      console.log(isMatch)
+
+//     /**
+//      * 4️⃣ Token generate
+//      */
+//     const token = generateToken({
+//       id: user._id,
+//       role,
+//       companyId: user.companyId?._id,
+//     });
+
+//     /**
+//      * 5️⃣ Response formatting
+//      */
+//     const userData = user.toObject();
+//     delete userData.password;
+//       console.log(userData)
+
+//     await recentActivity.create({title: `Welcome, ${user?.username || user?.fullName}`, createdBy:user?.id, createdByRole:user?.role==="admin"?"Admin":"Employee", companyId:user?.companyId || user?.createdBy || null});
+
+
+//     return res.status(200).json({
+//       message: "Login successful",
+//       token,
+//       user: {
+//         ...userData,
+//         role,
+//         fullName: userData.fullName || userData.name, // ✅ unified key
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Login Error:", err);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+
+
+
+
 const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -200,9 +281,7 @@ const loginAdmin = async (req, res) => {
     let user = null;
     let role = null;
 
-    /**
-     * 1️⃣ Try Admin login
-     */
+    // 1️⃣ Try Admin login
     user = await Admin.findOne({ email })
       .populate("companyId", "name logo")
       .select("+password");
@@ -210,62 +289,126 @@ const loginAdmin = async (req, res) => {
     if (user) {
       role = user?.role || "admin";
     } else {
-      /**
-       * 2️⃣ Try Employee login
-       */
+      // 2️⃣ Try Employee login
       user = await Employee.findOne({ email })
         .populate("createdBy", "name logo")
         .select("+password");
+
       if (user) role = user?.role || "employee";
     }
-    console.log(user)
 
     if (!user) {
       return res.status(400).json({ message: "Invalid email" });
     }
 
-    /**
-     * 3️⃣ Password check
-     */
+    // 3️⃣ Password check
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid password" });
     }
-     console.log(isMatch)
 
-    /**
-     * 4️⃣ Token generate
-     */
-    const token = generateToken({
+    // 4️⃣ Generate Access + Refresh Token
+    const payload = {
       id: user._id,
       role,
-      companyId: user.companyId?._id,
+      companyId: user.companyId?._id || user.createdBy?._id || null,
+    };
+
+    const accessToken = generateAccessToken(payload);
+    const refreshToken = generateRefreshToken({ id: user._id });
+
+    // 🔥 Save refresh token in DB
+    user.refreshToken = refreshToken;
+    await user.save();
+
+    // 🔥 Send refresh token in httpOnly cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: false, // production me true
+      sameSite: "strict",
     });
 
-    /**
-     * 5️⃣ Response formatting
-     */
+    // 5️⃣ Response formatting
     const userData = user.toObject();
     delete userData.password;
-      console.log(userData)
 
-    await recentActivity.create({title: `Welcome, ${user?.username || user?.fullName}`, createdBy:user?.id, createdByRole:user?.role==="admin"?"Admin":"Employee", companyId:user?.companyId || user?.createdBy || null});
-
+    await recentActivity.create({
+      title: `Welcome, ${user?.username || user?.fullName}`,
+      createdBy: user?.id,
+      createdByRole: user?.role === "admin" ? "Admin" : "Employee",
+      companyId: user?.companyId || user?.createdBy || null,
+    });
 
     return res.status(200).json({
       message: "Login successful",
-      token,
+      accessToken, // 🔥 now access token
       user: {
         ...userData,
         role,
-        fullName: userData.fullName || userData.name, // ✅ unified key
+        fullName: userData.fullName || userData.name,
       },
     });
+
   } catch (err) {
     console.error("Login Error:", err);
     return res.status(500).json({ message: "Server error" });
   }
 };
+
+
+
+const refresh = async (req, res) => {
+  try {
+    const token = req.cookies.refreshToken;
+
+    if (!token) {
+      return res.status(401).json({ message: "No refresh token" });
+    }
+
+    const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+
+    let user =
+      await Admin.findOne({ _id: decoded.id, refreshToken: token }) ||
+      await Employee.findOne({ _id: decoded.id, refreshToken: token });
+
+    if (!user) {
+      return res.status(403).json({ message: "Invalid refresh token" });
+    }
+
+    const newAccessToken = generateAccessToken({
+      id: user._id,
+      role: user.role,
+      companyId: user.companyId || user.createdBy || null,
+    });
+
+    return res.json({ accessToken: newAccessToken });
+
+  } catch (err) {
+    return res.status(403).json({ message: "Invalid or expired refresh token" });
+  }
+};
+
+const logout = async (req, res) => {
+  const token = req.cookies.refreshToken;
+
+  await Admin.findOneAndUpdate(
+    { refreshToken: token },
+    { refreshToken: null }
+  );
+
+  await Employee.findOneAndUpdate(
+    { refreshToken: token },
+    { refreshToken: null }
+  );
+
+  res.clearCookie("refreshToken");
+  res.json({ message: "Logged out successfully" });
+};
+
+
+
+
+
 const getUserById = async (req, res) => {
   try {
     const { companyId, userId } = req.query;
@@ -556,7 +699,7 @@ const getDashboardSummary = async (req, res) => {
         ? Math.round((newEmployeesThisMonth / totalEmployees) * 100)
         : 0;
 
-      const recentTasks = await Task.find({ companyId })
+      const recentTasks = await Task.find({ companyId }).populate("managerId")
         .sort({ createdAt: -1 })
         .limit(4);
 
@@ -600,13 +743,13 @@ const getDashboardSummary = async (req, res) => {
      recentActivity = await RecentActivity.find({companyId:companyId, createdBy:userId}).populate("createdBy","fullName")
      pendingTask = await Task.countDocuments({managerId:user?._id, companyId, status: "pending" });
       urgentTask = await Task.countDocuments({managerId:user?._id, companyId, status: "pending", urgent: true });
-     recentTasks = await Task.find({ managerId:user?._id, companyId }).sort({ createdAt: -1 }).limit(4);
+     recentTasks = await Task.find({ managerId:user?._id, companyId }).sort({ createdAt: -1 }).populate("managerId").limit(4);
        }
        else if(user?.taskRole === "none"){
              recentActivity = await RecentActivity.find({companyId:companyId, createdBy:userId}).populate("createdBy","fullName")
          pendingTask = await SubTask.countDocuments({employeeId:user?._id, companyId, status: "pending" });
        urgentTask = await SubTask.countDocuments({employeeId:user?._id, companyId, status: "pending", urgent: true });
-     recentTasks = await SubTask.find({ employeeId:user?._id, companyId }).sort({ createdAt: -1 }).limit(4);
+     recentTasks = await SubTask.find({ employeeId:user?._id, companyId }).populate("employeeId").sort({ createdAt: -1 }).limit(4);
        }
      
       summary = {
@@ -645,7 +788,7 @@ const getDashboardSummary = async (req, res) => {
       const employeeGrowth = totalEmployees
         ? Math.round((newEmployeesThisMonth / totalEmployees) * 100)
         : 0;
-     const recentTasks = await Project.find()
+     const recentTasks = await Project.find().populate("adminId")
   .sort({ createdAt: -1 }) // descending, latest first
   .limit(4);               // sirf 4 documents
 
@@ -1090,5 +1233,7 @@ module.exports = {
   getNotificationData,
   deleteNotifications,
   deleteAllNotifications,
-  adminStatusChange
+  adminStatusChange,
+  refresh,
+  logout
 };

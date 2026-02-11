@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { Bell, FolderKanban, CalendarDays, Receipt, Clock} from "lucide-react";
+import { Bell, FolderKanban, CalendarDays, Receipt, Clock, ArrowLeft} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -133,6 +133,15 @@ const Notifications: React.FC = () => {
         title={selectedNotificationId?"Delete  Notification Message?" : "Delete All Notification Message?"}
         message={selectedNotificationId?`This Action Will Permanently Delete This Notification Message.`: `This Action Will Permanently Delete All Notification Message.`}
       />
+
+      <div className="mb-4">
+                    <button
+                      onClick={() => window.history.back()}
+                      className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+                    >
+                      <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
+                    </button>
+                  </div>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

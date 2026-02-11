@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Building2, Plus, Search, MoreHorizontal, Edit, Trash2, Mail, Phone, MapPin, Users} from 'lucide-react';
+import { Building2, Plus, Search, MoreHorizontal, Edit, Trash2,ArrowLeft, Mail, Phone, MapPin, Users} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -89,6 +89,14 @@ const Companies: React.FC = () => {
         <title>Company Page</title>
         <meta name="description" content="This is the home page of our app" />
       </Helmet>
+       <div className="mb-4">
+                          <button
+                            onClick={() => window.history.back()}
+                            className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+                          >
+                            <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
+                          </button>
+                        </div>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
