@@ -25,7 +25,7 @@ const addCompany = async (req, res) => {
 
     // Upload logo if file exists
     let logoUrl = "";
-    if (req.files) {
+    if (req.files?.logo?.[0]?.buffer) {
       logoUrl = await uploadToCloudinary(req?.files?.logo?.[0]?.buffer)
     }
     // Duplicate checks
