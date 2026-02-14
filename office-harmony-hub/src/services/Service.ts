@@ -59,6 +59,31 @@ export const deleteAllNotifications = async (userId, companyId) => {
   return res;
 };
 
+
+export const getAttendanceData = async (month, year, companyId) => {
+  const res = await axios.get(
+    `${import.meta.env.VITE_API_URL}/api/attendance`,{params : {month, year, companyId : companyId}})
+
+  return res;
+};
+
+
+export const getAttendancebyday = async (obj) => {
+  const res = await axios.get(
+    `${import.meta.env.VITE_API_URL}/api/attendance/attendancebyday`,{params : obj})
+
+  return res;
+};
+
+
+export const updateAttendancebyday = async (obj) => {
+  const res = await axios.patch(
+    `${import.meta.env.VITE_API_URL}/api/attendance/update/attendance`,obj)
+
+  return res;
+};
+
+
 export const submitClockIn = async (id: string, companyId) => {
   const res = await axios.post(
     `${import.meta.env.VITE_API_URL}/api/attendance/clock-in/${id}`, {companyId}
@@ -420,6 +445,15 @@ export const getCompanys = async (id) => {
   return res;
 };
 
+
+export const getCompanysByDashboard = async (id) => {
+  const res = await axios.get(
+    `${import.meta.env.VITE_API_URL}/api/company/company/dashboard/${id}`
+  );
+
+  return res;
+};
+
 export const getAdmins = async (id) => {
   const res = await axios.get(
     `${import.meta.env.VITE_API_URL}/api/auth/get/${id}`
@@ -487,6 +521,14 @@ export const getSinglePayRoll = async (id, companyId) => {
   return res.data;
 };
 
+export const addDepartment = async (obj) => {
+  const res = await axios.post(
+    `${import.meta.env.VITE_API_URL}/api/departments/add`, obj
+  );
+
+  return res;
+};
+
 export const getDepartments = async (id) => {
   const res = await axios.get(
     `${import.meta.env.VITE_API_URL}/api/departments/get/${id}`
@@ -496,9 +538,56 @@ export const getDepartments = async (id) => {
 };
 
 
+export const updateDepartment = async (id, obj) => {
+  const res = await axios.patch(
+    `${import.meta.env.VITE_API_URL}/api/departments/updateDepartment/${id}`, obj
+  );
+
+  return res;
+};
+
+
+
+
+export const updateEmployeeByDepartment = async (obj) => {
+  const res = await axios.patch(
+    `${import.meta.env.VITE_API_URL}/api/departments/update/employee`,obj
+  );
+
+  return res.data;
+};
+
+
+export const addEmployees = async (formData) => {
+  const res = await axios.post(
+    `${import.meta.env.VITE_API_URL}/api/employees/add`,formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+  );
+
+  return res.data;
+};
+
 export const getEmployees = async (id) => {
   const res = await axios.get(
     `${import.meta.env.VITE_API_URL}/api/employees/get/${id}`
+  );
+
+  return res.data;
+};
+
+
+export const updateEmployees = async (id, formData) => {
+  const res = await axios.put(
+    `${import.meta.env.VITE_API_URL}/api/employees/updateEmployee/${id}`,
+    formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
   );
 
   return res.data;

@@ -32,14 +32,6 @@ export interface Company {
   createdAt: string;
 }
 
-export interface Department {
-  id: string;
-  name: string;
-  description: string;
-  managerId?: string;
-  companyId: string;
-  employeeCount: number;
-}
 
 export interface Task {
   id: string;
@@ -119,11 +111,8 @@ export type Status = "Pending" | "In-Progress" | "Completed" | "Blocked"  | "Ove
 
 export type ModalType = "view" | "edit" | "statusChange" | null;
 
-export type Priority = 'Low' | 'Medium' | 'High';
 
-
-
-export interface TaskFormData {
+export interface SubTaskFormData {
   _id?: string;
   taskId?: string;
   name?: string;
@@ -135,11 +124,12 @@ export interface TaskFormData {
   remarks?: string;
 }
 
-export interface TaskFormModalProps {
+export interface SubTaskFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialData?: any;
   setSubTaskListRefresh: (value: boolean) => void;
+  taskId:string;
 }
 
 interface createdBy{
@@ -161,3 +151,107 @@ export interface Notification {
   createdBy:createdBy
 }
 
+
+
+
+export interface AttendanceItem {
+  _id: string;
+  clockIn: string;
+  clockOut: string;
+  date: string;
+  hoursWorked: number;
+  status: string;
+  userId: {
+    _id: string;
+    fullName: string;
+    profileImage: string;
+  };
+}
+
+export interface Props {
+  attendanceRefresh: number; // trigger refresh from parent
+}
+export const months = [
+  "January", "February", "March", "April",
+  "May", "June", "July", "August",
+  "September", "October", "November", "December"
+];
+
+
+
+
+
+
+export interface TaskFormData {
+  _id?: string;
+  projectId?: string;
+  name?: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  manager?: string;
+  priority?: Priority;
+  status?: Status;
+  remarks?: string;
+}
+
+export interface TaskFormModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  initialData?: any;
+  setTaskListRefresh: (value: boolean) => void;
+  projectId:string;
+}
+
+
+export type Priority = 'low' | 'medium' | 'high' | 'urgent';
+
+export interface ProjectFormData {
+  _id?: string;
+  name?: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  priority?: Priority;
+  remarks?: string;
+  status?: string;
+}
+
+export interface ProjectFormProps {
+  isOpen: boolean;
+  onClose: () => void;
+  initialData?: ProjectFormData | null;
+  setProjectListRefresh: (value: boolean) => void;
+}
+
+
+
+
+
+
+export interface EmployeeFormDialogProps {
+  open: boolean;
+  onClose: () => void;
+  isEditMode?: boolean;
+  initialData: any;
+  setEmployeeListRefresh: (refresh: boolean) => void;
+  selectedDepartmentName:string;
+}
+
+
+export interface Department {
+  id: string;
+  name: string;
+  description: string;
+  managerId?: string;
+  companyId: string;
+  employeeCount: number;
+}
+
+ export interface EmployeeDepartment {
+  _id: string;
+  name: string;
+  description: string;
+  createdAt?: string;
+  updatedAt?: string;
+}

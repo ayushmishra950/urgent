@@ -207,14 +207,14 @@ export default function Expenses() {
         message="This Action Will permanently Delete This Expense."
       />
 
-       <div className="mb-4">
-              <button
-                onClick={() => window.history.back()}
-                className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-              </button>
-            </div>
+     <div className="md:mt-[-20px] md:mb-[-10px]">
+       <button
+         onClick={() => window.history.back()}
+         className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+       >
+         <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
+       </button>
+     </div>
 
       <Card className="shadow-md">
         <CardHeader className="pb-3 sm:pb-4">
@@ -370,7 +370,7 @@ export default function Expenses() {
                     </TableCell>
                     <TableCell className="font-medium">₹{expense.amount.toLocaleString()}</TableCell>
                     <TableCell className="hidden md:table-cell">{expense.paidBy}</TableCell>
-                    <TableCell className="hidden lg:table-cell max-w-xs truncate">{expense.notes}</TableCell>
+                    <TableCell className="hidden lg:table-cell max-w-xs truncate">{expense.notes || "-"}</TableCell>
                     <TableCell className="text-right flex items-center justify-end gap-2">
                       {/* Edit Button */}
                       <Button

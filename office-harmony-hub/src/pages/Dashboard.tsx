@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { formatDate } from "@/services/allFunctions";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from 'react-router-dom';
+import CompanyList from "@/components/cards/CompanyCard";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -50,9 +51,9 @@ const Dashboard: React.FC = () => {
   };
 
   const handleGetDashboard = async () => {
-    if (user && user?.role !== "super_admin") {
+    if (user && user?.role === "super_admin") return;
       if (!user?._id || (!user?.companyId?._id && !user?.createdBy?._id)) return toast({ title: "Error", description: "required field Missing.", variant: "destructive" });
-    }
+
     try {
       const res = await getDashboardPage(user?._id, user?.companyId?._id || user?.createdBy?._id);
       console.log(res);
@@ -84,35 +85,11 @@ const Dashboard: React.FC = () => {
           <h1 className="page-header">{getRoleTitle()}</h1>
           <p className="text-muted-foreground">Welcome back, {user?.name}! Here's what's happening today.</p>
         </div>
-
+         {(user?.role === "super_admin") && (<CompanyList />)}
+         { user?.role !== 'super_admin' &&  <>
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-          {user?.role === 'super_admin' && (
-            <>
-              <StatCard
-                title="Total Companies"
-                value={dashboardData?.totalCompanies}
-                change={`+${dashboardData?.newCompaniesThisMonth} this month`}
-                changeType="positive"
-                icon={Building2}
-              />
-              <StatCard
-                title="Total Admins"
-                value={dashboardData?.totalAdmins}
-                change={`+${dashboardData?.newAdminsThisMonth} this month`}
-                changeType="positive"
-                icon={Users}
-              />
-              <StatCard
-                title="Total Employees"
-                value={dashboardData?.totalEmployees}
-                change={`+${dashboardData?.newEmployeesThisMonth} this month`}
-                changeType="positive"
-                icon={Users}
-              />
-            </>
-          )}
-
+          
           {(user?.role === 'admin') && (
             <>
               <StatCard
@@ -184,38 +161,45 @@ const Dashboard: React.FC = () => {
         {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Tasks */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FolderKanban className="w-5 h-5 text-primary" />
-                Recent {user?.role === "super_admin" ? "Projects" : "Tasks"}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {dashboardData?.recentTasks?.slice(0, 5)?.map((task) => (
-                  <div
-                    key={task._id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      {getStatusIcon(task.status)}
-                      <div>
-                        <div className="flex justify-between items-center">
-                          <p className="font-medium text-sm">{task.name}</p>
-                          <p className="text-sm md:ml-6 text-muted-foreground">
-                            Assigned To: {task?.managerId?.fullName || task?.employeeId?.fullName || task?.adminId?.username} {/* replace with the actual variable */}
-                          </p>
-                        </div>
-                        <p className="text-xs text-muted-foreground">Due: {formatDate(task.endDate)}</p>
-                      </div>
-                    </div>
-                    {getPriorityBadge(task.priority)}
-                  </div>
-                ))}
+         <Card>
+  <CardHeader>
+    <CardTitle className="flex items-center gap-2">
+      <FolderKanban className="w-5 h-5 text-primary" />
+      Recent {user?.role === "admin" ? "Task" : ""}
+    </CardTitle>
+  </CardHeader>
+  <CardContent>
+    {dashboardData?.recentTasks?.length > 0 ? (
+      <div className="space-y-4">
+        {dashboardData.recentTasks.slice(0, 5).map((task) => (
+          <div
+            key={task._id}
+            className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              {getStatusIcon(task.status)}
+              <div>
+                <div className="flex justify-between items-center">
+                  <p className="font-medium text-sm">{task.name}</p>
+                  <p className="text-sm md:ml-6 text-muted-foreground">
+                    Assigned To: {task?.managerId?.fullName || task?.employeeId?.fullName || task?.adminId?.username}
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground">Due: {formatDate(task.endDate)}</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            {getPriorityBadge(task.priority)}
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div className="flex justify-center items-center h-32 text-muted-foreground font-medium">
+       {user?.role === "admin" ? "Task" : ""} Not Found
+      </div>
+    )}
+  </CardContent>
+</Card>
+
 
           {/* Recent Activity */}
           <Card>
@@ -283,8 +267,10 @@ const Dashboard: React.FC = () => {
             </CardContent>
           </Card>
         )}
-      </div>
+        </>
+        }
 
+      </div>
 
     </>
   );

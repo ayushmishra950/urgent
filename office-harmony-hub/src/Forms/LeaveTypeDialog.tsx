@@ -63,7 +63,7 @@ setLeaveTypeRefresh
   const handleSubmit = async (e?:React.FormEvent) => {
     e.preventDefault();
   if (!form.name) {
-    alert("Leave type name is required!");
+    toast({title:"Leave Type.", description:"Name is required.", variant:"destructive"})
     return;
   }
 
@@ -159,6 +159,7 @@ setLeaveTypeRefresh
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               autoFocus
+              required
             />
           </div>
 
@@ -182,6 +183,7 @@ setLeaveTypeRefresh
               onChange={(e) =>
                 setForm({ ...form, maxDays: Number(e.target.value) || 1 })
               }
+              required
             />
           </div>
 
@@ -203,6 +205,7 @@ setLeaveTypeRefresh
               type="color"
               value={form.color}
               onChange={(e) => setForm({ ...form, color: e.target.value })}
+              required
             />
           </div>
         </div>
@@ -216,7 +219,7 @@ setLeaveTypeRefresh
           >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={loading || !form?.name || !form?.description}>
+          <Button onClick={handleSubmit} disabled={loading || !form?.name}>
             {loading ? (isEditMode ? 'Updating...' : 'Saving...') : isEditMode ? 'Update Leave Type' : 'Create Leave Type'}
           </Button>
         </DialogFooter>

@@ -106,14 +106,14 @@ const TaskManager: React.FC = () => {
             />
 
             <div className="flex flex-col min-h-screen bg-gray-50/50 p-3 sm:p-6 space-y-6 max-w-[100vw] sm:max-w-none">
-               <div className="mb-4">
-                                                    <button
-                                                      onClick={() => window.history.back()}
-                                                      className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-                                                    >
-                                                      <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-                                                    </button>
-                                                  </div>
+            <div className="md:mt-[-45px] md:mb-[-15px]">
+              <button
+                onClick={() => window.history.back()}
+                className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
+              </button>
+            </div>
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>

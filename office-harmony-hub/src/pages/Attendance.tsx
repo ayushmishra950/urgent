@@ -6,16 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AttendanceTable from "@/components/cards/AttendanceCard";
 import { useToast } from "@/hooks/use-toast";
-import { getEmployees, submitClockIn, submitClockOut } from "@/services/Service";
+import { getEmployees, submitClockIn, submitClockOut, getAttendanceData } from "@/services/Service";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { Helmet } from "react-helmet-async";
+import AttendanceForm from "@/Forms/AttendanceDialog"
 
-import axios from "axios";
-const months = [
-  "January", "February", "March", "April",
-  "May", "June", "July", "August",
-  "September", "October", "November", "December"
-];
  const today = new Date();
 const getTodayDate = () => today.toISOString().split("T")[0];
 
@@ -28,12 +23,13 @@ const Attendance: React.FC = () => {
   const [attendanceRefresh, setAttendanceRefresh] = useState(0);
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
       const { notifications, markAsRead, deleteNotification } = useNotifications();
+      const [attendanceForm, setAttendanceForm] = useState(false);
   
 
   // =================== Fetch Employees ===================
   const handleGetEmployees = async () => {
     try {
-      const data = await getEmployees(user?._id);
+      const data = await getEmployees(user?.companyId?._id);
       if (Array.isArray(data)) setEmployeeList(data);
     } catch (err: any) {
       toast({
@@ -50,10 +46,12 @@ const Attendance: React.FC = () => {
 
       const month = selected.getMonth() + 1; // JS months = 0–11
       const year = selected.getFullYear();
+      const companyId = user?.role === "employee"? user?.createdBy?._id : user?.companyId?._id;
+      if(!month || !year || !companyId) return;
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/attendance`,
-        {params : {month, year, companyId : user?.role === "employee" ? user?.createdBy?._id : user?.companyId?._id}});
-      if (Array.isArray(res?.data?.records)) setAttendanceList(res?.data?.records);
+      const res = await getAttendanceData(month, year, companyId);
+  
+        if (Array.isArray(res?.data?.records)) setAttendanceList(res?.data?.records);
     } catch (err: any) {
       // toast({
       //   title: "Error",
@@ -64,7 +62,9 @@ const Attendance: React.FC = () => {
   };
 
   useEffect(() => {
+    if(user?.role === "admin"){
     handleGetEmployees();
+    }
     handleGetAttendances(selectedDate);
   }, [notifications]);
 
@@ -153,16 +153,22 @@ const attendanceUIState = useMemo(() => {
         <title>Attendance Page</title>
         <meta name="description" content="This is the home page of our app" />
       </Helmet>
-       <div className="mb-4">
-              <button
-                onClick={() => window.history.back()}
-                className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-              </button>
-            </div>
+      <AttendanceForm
+      isOpen={attendanceForm}
+      onClose={()=>{setAttendanceForm(false)}}
+      setAttendanceRefresh={setAttendanceRefresh}
+      />
+      <div className="md:mt-[-20px] md:mb-[-10px]">
+        <button
+          onClick={() => window.history.back()}
+          className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+        >
+          <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
+        </button>
+      </div>
     <div className="space-y-6 p-4 md:p-6">
       {/* Header */}
+      <div className="flex items-center justify-between">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-3">
           <Clock className="w-8 h-8 text-primary" />
@@ -173,6 +179,8 @@ const attendanceUIState = useMemo(() => {
             ? "Overview of all employees' attendance"
             : "Your daily attendance record"}
         </p>
+      </div>
+       {user?.role === "admin" && <Button size="sm" onClick={()=>{setAttendanceForm(true)}}>Update Attendance</Button>}
       </div>
 
       {/* Clock In/Out Card */}

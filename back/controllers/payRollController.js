@@ -1,6 +1,8 @@
 const PayRoll = require("../models/payRollModel");
 const Department = require("../models/departmentModel");
 const Company = require("../models/companyModel"); // company model
+const { EmployeeHistory } = require("../models/EmployeeHistoryModel.js");
+const { Employee } = require("../models/employeeModel.js"); // adjust path if needed
 
 // Admin: Create a new salary record
 const createSalary = async (req, res) => {
@@ -17,6 +19,10 @@ const createSalary = async (req, res) => {
     if (!company) {
       return res.status(404).json({ message: "Company not found" });
     }
+        const employee = await Employee.findOne({_id:employeeId, createdBy:companyId});
+        if(!employee) return res.status(404).json({message:"Employee Not Found."})
+        
+        if(employee?.status === "RELIEVED") return res.status(403).json({message : "Employee has already been relieved from the company."})
 
     // 3️⃣ Find department by name
     const department = await Department.findOne({ name: departmentName.trim() });
@@ -38,6 +44,29 @@ const createSalary = async (req, res) => {
 
     const savedSalary = await newSalary.save();
 
+    // 5️⃣ Log salary history
+    if (employee) {
+      const oldSalary = employee.monthSalary || 0; // previous salary
+      const newMonthSalary = basic + allowance - deductions; // compute new effective salary
+
+      // Only log if salary changed
+      if (oldSalary !== newMonthSalary) {
+        await EmployeeHistory.create({
+          employeeId,
+          eventType: "SALARY_CHANGE",
+          oldData: { monthSalary: oldSalary },
+          newData: { monthSalary: newMonthSalary },
+          remarks: `Salary created for ${month}-${year}`,
+          changedBy: company._id, // the company/admin who made the change
+        });
+      }
+
+      // Optionally, update employee's monthSalary field
+      employee.monthSalary = newMonthSalary;
+      await employee.save();
+    }
+
+
     res.status(201).json({
       message: "Salary slip created successfully",
       data: savedSalary,
@@ -58,7 +87,7 @@ const getAllSalaries = async (req, res) => {
     }
 
     const salaries = await PayRoll.find({ createdBy: companyId })
-      .populate("departmentId", "name")
+      .populate("departmentId")
       .populate("employeeId", "fullName")
       .sort({ createdAt: -1 });
 

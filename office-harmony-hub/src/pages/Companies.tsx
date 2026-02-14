@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Building2, Plus, Search, MoreHorizontal, Edit, Trash2,ArrowLeft, Mail, Phone, MapPin, Users} from 'lucide-react';
+import { Building2, Plus, Search, MoreHorizontal, Edit, Trash2,ArrowLeft,Globe , Mail, Phone, MapPin, Users, Calendar} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from '@/components/ui/dropdown-menu';
 import CompanyFormDialog from "@/Forms/CompanyFormDialog";
-import { getCompanys } from "@/services/Service";
+import { getCompanysByDashboard } from "@/services/Service";
+import {formatDate} from "@/services/allFunctions";
 import { useAuth } from "@/contexts/AuthContext";
 import axios from 'axios';
 import { useToast } from '@/hooks/use-toast';
@@ -66,11 +67,11 @@ const Companies: React.FC = () => {
 
   const handleGetCompany = async () => {
     try {
-      const res = await getCompanys(user?._id);
+      const res = await getCompanysByDashboard(user?._id);
       console.log(res)
       if (res.status === 200) {
         setRefreshCompanyList(false);
-        setCompanyList(Array.isArray(res.data) ? res.data : []);
+        setCompanyList(Array.isArray(res?.data?.companies) ? res.data?.companies : []);
 
       }
     }
@@ -89,14 +90,14 @@ const Companies: React.FC = () => {
         <title>Company Page</title>
         <meta name="description" content="This is the home page of our app" />
       </Helmet>
-       <div className="mb-4">
-                          <button
-                            onClick={() => window.history.back()}
-                            className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-                          >
-                            <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-                          </button>
-                        </div>
+       <div className="md:mt-[-20px] md:mb-[5px]">
+             <button
+               onClick={() => window.history.back()}
+               className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+             >
+               <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
+             </button>
+           </div>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -150,7 +151,7 @@ const Companies: React.FC = () => {
       {/* Companies Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 justify-center">
         {filteredCompanies.map((company) => (
-          <Card key={company.id} className="hover:shadow-md transition-shadow max-w-lg mx-auto">
+          <Card key={company._id} className="hover:shadow-md transition-shadow max-w-lg mx-auto">
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-4">
@@ -173,8 +174,8 @@ const Companies: React.FC = () => {
                         {company.isActive ? "Active" : "Inactive"}
                       </span>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Since {new Date(company.createdAt).getFullYear()}
+                     <p className="text-sm text-muted-foreground">
+                      Admin:- {company?.admins?.[0]?.username || "Admin"}
                     </p>
                   </div>
 
@@ -215,6 +216,14 @@ const Companies: React.FC = () => {
                 <div className="flex items-start gap-2 text-muted-foreground">
                   <MapPin className="w-4 h-4 mt-0.5" />
                   <span>{company.address}</span>
+                </div>
+                 <div className="flex items-start gap-2 text-muted-foreground">
+                  <Calendar className="w-4 h-4 mt-0.5" />
+                  <span>{formatDate(company.createdAt)}</span>
+                </div>
+                  <div className="flex items-start gap-2 text-muted-foreground">
+                  <Globe className="w-4 h-4 mt-0.5" />
+                  <span>{company?.website}</span>
                 </div>
               </div>
 

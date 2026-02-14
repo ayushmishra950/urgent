@@ -11,5 +11,7 @@ router.post("/clock-in/:userId", attendanceController.clockIn);
 
 // Clock Out (Employee only)
 router.post("/clock-out/:userId", attendanceController.clockOut);
+router.get("/attendancebyday", attendanceController.getAttendanceByDay);
+router.patch("/update/attendance", attendanceController.updateAttendanceByDay);
 
 module.exports = router;

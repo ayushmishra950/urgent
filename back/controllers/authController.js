@@ -61,7 +61,7 @@ const registerAdmin = async (req, res) => {
     });
 
     // 🔥 VERY IMPORTANT: update company with admin id
-    company.admins = newAdmin._id;
+    company.admins = [newAdmin._id];
     await company.save();
 
     await recentActivity.create({title:`New Admin Added.`, createdBy:userId, createdByRole:"Admin", companyId:companyId});

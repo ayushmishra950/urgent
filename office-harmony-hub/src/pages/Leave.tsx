@@ -172,14 +172,14 @@ const Leave: React.FC = () => {
         title="Delete Leave Type?"
         message="This Action Will permanently Delete This Leave Type."
       />
-      <div className="mb-4">
-              <button
-                onClick={() => window.history.back()}
-                className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-              </button>
-            </div>
+    <div className="md:mt-[-20px] md:mb-[-10px]">
+      <button
+        onClick={() => window.history.back()}
+        className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+      >
+        <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
+      </button>
+    </div>
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Plus, MoreHorizontal, Search, Filter, Eye, Edit, UserCheck, Trash2, ArrowLeft } from "lucide-react";
+import { Plus, MoreHorizontal, Search, Filter, Eye, Edit, UserCheck, Trash2, ArrowLeft, CheckSquare  } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,16 +8,18 @@ import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "@/components/ui/select";
 import TaskForm from "./forms/TaskForm";
+import SubTaskForm from "./forms/SubTaskForm";
 import ReassignForm from "./forms/ReassignForm";
 import TaskStatusChangeModal from "./cards/TaskStatusChangeModal";
 import TaskDetailCard from "./cards/TaskDetailCard";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { getTask, taskStatusChange, reassignTask, deleteTask } from "@/services/Service";
+import { getTask, taskStatusChange, reassignTask, deleteTask, getEmployees } from "@/services/Service";
 import { formatDate, getStatusColor, getPriorityColor } from "@/services/allFunctions";
 import DeleteCard from "@/components/cards/DeleteCard";
 import SubTaskDetailCard from "./cards/SubTaskDetailCard";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface TaskItem {
   id: number;
@@ -49,22 +51,70 @@ const Task: React.FC = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
-     const { notifications, markAsRead, deleteNotification } = useNotifications();
+  const { notifications, markAsRead, deleteNotification } = useNotifications();
+    const [subTaskListRefresh, setSubTaskListRefresh] = useState(false);
+    const[subTaskOpenForm, setSubTaskOpenForm] = useState(false);
+    const[taskId, setTaskId] = useState("");
+      const [employeeList, setEmployeeList] = useState<any[]>([]);
+    
   
-const today = new Date();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const projectId = location?.state?.id;
+  const projectName = location?.state?.name;
 
-const filteredTasks = taskList.filter((t) => {
-  const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase());
+  const today = new Date();
 
-  const matchesStatus = filterStatus === "all" || (filterStatus === "overdue"
+  const filteredTasks = taskList.filter((t) => {
+    const matchesProject = projectId ? t.projectId?._id === projectId : true;
+    const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase());
+
+    const matchesStatus = filterStatus === "all" || (filterStatus === "overdue"
       ? new Date(t.endDate) < today : t.status === filterStatus);
 
-  return matchesSearch && matchesStatus;
-});
+    return matchesProject && matchesSearch && matchesStatus;
+  });
 
+  
+    // =================== Fetch Employees ===================
+    const handleGetEmployees = async () => {
+      try {
+        const data = await getEmployees(user?.companyId?._id || user?.createdBy?._id);
+        if (Array.isArray(data)) setEmployeeList(data);
+      } catch (err: any) {
+        toast({
+          title: "Error",
+          description: err?.response?.data?.message || "Something went wrong",
+          variant: "destructive",
+        });
+      }
+    };
+
+      useEffect(()=>{
+        if(user?.role !=="admin" && user?.taskRole !=="manager") return
+          handleGetEmployees();
+        }, [])
+
+         const handleOpenTaskForm = () => {
+  // 1️⃣ No employees
+  if (!employeeList || employeeList.length === 0) {
+    return toast({ title: "No Employees Found", description: "Please add at least one employee before creating a project.", variant: "destructive" });
+  }
+
+  // 2️⃣ Check if at least one manager exists
+  const hasManager = employeeList.some(
+    (emp) => emp?.taskRole && emp.taskRole !== "none"
+  );
+  if (!hasManager) {
+    return toast({ title: "Manager Required", description: "Please assign at least one employee as a manager before creating a project.", variant: "destructive" });
+  }
+  // 3️⃣ All good
+  setInitialData(null);
+  setIsFormOpen(true);
+};
 
   const handleReassignTask = async (object) => {
-        if(!user?._id || (!user?.companyId?._id&& !user?.createdBy?._id))return;
+    if (!user?._id || (!user?.companyId?._id && !user?.createdBy?._id)) return;
 
     let obj = { ...object, adminId: user?._id, companyId: user?.companyId?._id || user?.createdBy?._id }
     console.log(obj)
@@ -85,7 +135,7 @@ const filteredTasks = taskList.filter((t) => {
 
 
   const handleChangeStatus = async () => {
-    if(!user?._id || (!user?.companyId?._id&& !user?.createdBy?._id) || !selectedTask?._id || !newStatus)return;
+    if (!user?._id || (!user?.companyId?._id && !user?.createdBy?._id) || !selectedTask?._id || !newStatus) return;
     let obj = { adminId: user?._id, companyId: user?.companyId?._id || user?.createdBy?._id, taskId: selectedTask?._id, status: newStatus }
     try {
       const res = await taskStatusChange(obj);
@@ -126,7 +176,7 @@ const filteredTasks = taskList.filter((t) => {
   }, [taskListRefresh, notifications])
 
   const handleConfirmDelete = async () => {
-    if (!selectedTaskId || (!user?.companyId?._id&& !user?.createdBy?._id) || !user?._id) return;
+    if (!selectedTaskId || (!user?.companyId?._id && !user?.createdBy?._id) || !user?._id) return;
     let obj = { taskId: selectedTaskId, companyId: user?.companyId?._id || user?.createdBy?._id, adminId: user?._id }
     setIsDeleting(true);
     try {
@@ -151,10 +201,17 @@ const filteredTasks = taskList.filter((t) => {
     }
   };
 
-
   return (
     <>
+          <SubTaskForm
+           isOpen={subTaskOpenForm}
+            setSubTaskListRefresh={setSubTaskListRefresh}
+             onClose={() => setSubTaskOpenForm(false)}
+             taskId={taskId}
+              initialData={null} />
+
       <TaskForm
+      projectId={null}
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         initialData={initialData}
@@ -176,50 +233,61 @@ const filteredTasks = taskList.filter((t) => {
         onSave={handleReassignTask}
       />
       <TaskStatusChangeModal name={name} task={selectedTask} isOpen={isTaskStatusChangeModalOpen} newStatus={newStatus} setNewStatus={setNewStatus} onConfirm={handleChangeStatus} onClose={() => setIsTaskStatusChangeModalOpen(false)} />
-     {(user?.role === "admin" || user?.taskRole === "manager") ? (
-  <TaskDetailCard isOpen={taskCard} taskId={selectedTaskId} onClose={() => setTaskCard(false)} />
-) : user?.taskRole === "none" ? (
-  <SubTaskDetailCard isOpen={taskCard} subTaskId={selectedTaskId} onClose={() => setTaskCard(false)} />
-) : null}
+      {(user?.role === "admin" || user?.taskRole === "manager") ? (
+        <TaskDetailCard isOpen={taskCard} taskId={selectedTaskId} onClose={() => setTaskCard(false)} />
+      ) : user?.taskRole === "none" ? (
+        <SubTaskDetailCard isOpen={taskCard} subTaskId={selectedTaskId} onClose={() => setTaskCard(false)} />
+      ) : null}
 
 
       <div className="flex flex-col min-h-screen bg-gray-50/50 p-3 sm:p-6 space-y-6 max-w-[100vw] sm:max-w-none">
-        <div className="mb-4">
-                          <button
-                            onClick={() => window.history.back()}
-                            className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-                          >
-                            <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-                          </button>
-                        </div>
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
-              Tasks
-            </h2>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              Manage ongoing tasks and track progress.
-            </p>
-          </div>
-         { user?.taskRole !== "none"? <Button
-            className="w-full sm:w-auto"
-            onClick={() => {
-              setInitialData(null);
-              setIsFormOpen(true);
-            }}
+        <div className="md:mt-[-45px] md:mb-[-15px]">
+          <button
+            onClick={() => window.history.back()}
+            className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
           >
-            <Plus className="mr-2 h-4 w-4" /> Create Task
-          </Button> : ""}
+            <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
+          </button>
         </div>
+        {/* Header */}
 
         <Card>
           <CardHeader>
-            <CardTitle>Task List</CardTitle>
-            <CardDescription>
-              Tasks with project, priority, and deadlines.
-            </CardDescription>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 w-full">
+
+              {/* Left Side: Project Name + Task List */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                {projectName && (
+                  <h1 className="text-3xl font-bold text-gray-900 truncate">
+                    Project: {projectName}
+                  </h1>
+                )}
+                <h2 className={`text-xl font-semibold text-gray-700 truncate ${projectName ? "sm:ml-3" : ""
+                  }`}>
+                  Task List
+                </h2>
+              </div>
+
+              {/* Right Side: Create Task Button */}
+              {user?.taskRole !== "none" && (
+                <Button
+                  className="w-full sm:w-auto mt-2 sm:mt-0"
+                  onClick={handleOpenTaskForm}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Create Task
+                </Button>
+              )}
+            </div>
+
+            {/* Optional description under Project Name */}
+            {projectName && (
+              <p className="text-gray-500 text-sm mt-1">
+                Manage tasks for this project, track progress, and deadlines.
+              </p>
+            )}
           </CardHeader>
+
+
 
           <CardContent>
             {/* Search & Filter */}
@@ -255,8 +323,8 @@ const filteredTasks = taskList.filter((t) => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Task</TableHead>
-                    <TableHead>{user?.taskRole === "none"?"Parent Task" : "Project"}</TableHead>
-                    {user?.taskRole !=="none"?<TableHead>Manager</TableHead> : ""}
+                    <TableHead>{user?.taskRole === "none" ? "Parent Task" : "Project"}</TableHead>
+                    {user?.taskRole !== "none" ? <TableHead>Manager</TableHead> : ""}
                     <TableHead>AssignedBy</TableHead>
                     <TableHead>Priority</TableHead>
                     <TableHead>Status</TableHead>
@@ -267,13 +335,13 @@ const filteredTasks = taskList.filter((t) => {
                 <TableBody>
                   {filteredTasks.length ? (
                     filteredTasks.map((task) => (
-                      <TableRow key={task._id}>
+                      <TableRow key={task._id} className={user?.taskRole === "none"?"" :`cursor-pointer`} onClick={() => { if(user?.taskRole !== "none") {navigate("/tasks/sub-task", { state: { id: task?._id,projectName:task?.projectId?.name, taskName:task?.name } })} }}>
                         <TableCell className="font-medium whitespace-nowrap">
                           {task.name}
                         </TableCell>
                         <TableCell className="whitespace-nowrap">{task?.projectId?.name || task?.taskId?.name}</TableCell>
-                        {user?.taskRole !== "none"?<TableCell className="whitespace-nowrap">{task.managerId?.fullName} ({task?.managerId?.department})</TableCell>:""}
-                       <TableCell >{task?.createdBy?.username ||task?.createdBy?.fullName} ({task?.createdByRole==="Employee"?"Manager":"Admin"})</TableCell>
+                        {user?.taskRole !== "none" ? <TableCell className="whitespace-nowrap">{task.managerId?.fullName} ({task?.managerId?.department})</TableCell> : ""}
+                        <TableCell >{task?.createdBy?.username || task?.createdBy?.fullName} ({task?.createdByRole === "Employee" ? "Manager" : "Admin"})</TableCell>
                         <TableCell>
                           <Badge className={`${getPriorityColor(task.priority)} whitespace-nowrap`}>
                             {task.priority}</Badge>
@@ -292,9 +360,21 @@ const filteredTasks = taskList.filter((t) => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-44">
+                                <DropdownMenuItem
+                                className="flex items-center gap-2 cursor-pointer"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setTaskId(task?._id)
+                                  setSubTaskOpenForm(true);
+                                }}
+                              >
+                                <CheckSquare  className="h-4 w-4 text-green-600" />
+                                Add Sub-Task
+                              </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="flex items-center gap-2 cursor-pointer"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setSelectedTaskId(task?._id);
                                   setTaskCard(true);
                                 }}
@@ -302,9 +382,10 @@ const filteredTasks = taskList.filter((t) => {
                                 <Eye className="h-4 w-4 text-green-600" />
                                 View Task
                               </DropdownMenuItem>
-                             {user?.taskRole !== "none"? <><DropdownMenuItem
+                              {user?.taskRole !== "none" ? <><DropdownMenuItem
                                 className="flex items-center gap-2 cursor-pointer"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setInitialData(task);
                                   setIsFormOpen(true);
                                 }}
@@ -313,21 +394,21 @@ const filteredTasks = taskList.filter((t) => {
                                 Edit Task
                               </DropdownMenuItem>
 
-                              <DropdownMenuItem onClick={() => { setSelectedTask(task); setReasignForm(true) }} className="flex items-center gap-2 cursor-pointer">
-                                <UserCheck className="h-4 w-4 text-blue-600 " />
-                                Reassign
-                              </DropdownMenuItem>
+                                <DropdownMenuItem onClick={(e) => {e.stopPropagation(); setSelectedTask(task); setReasignForm(true) }} className="flex items-center gap-2 cursor-pointer">
+                                  <UserCheck className="h-4 w-4 text-blue-600 " />
+                                  Reassign
+                                </DropdownMenuItem>
                               </>
-                              : ""
-}
-                              <DropdownMenuItem onClick={() => { setSelectedTask(task); setIsTaskStatusChangeModalOpen(true) }} className="flex items-center gap-2 cursor-pointer">
+                                : ""
+                              }
+                              <DropdownMenuItem onClick={(e) => {e.stopPropagation(); setSelectedTask(task); setIsTaskStatusChangeModalOpen(true) }} className="flex items-center gap-2 cursor-pointer">
                                 <Filter className="h-4 w-4 text-purple-600" />
                                 Change Status
                               </DropdownMenuItem>
 
                               <DropdownMenuSeparator />
 
-                            { user?.taskRole !== "none"?  <DropdownMenuItem onClick={() => { setSelectedTaskId(task?._id); setIsDeleteDialogOpen(true) }} className="flex items-center gap-2 text-red-600 cursor-pointer">
+                              {user?.taskRole !== "none" ? <DropdownMenuItem onClick={() => { setSelectedTaskId(task?._id); setIsDeleteDialogOpen(true) }} className="flex items-center gap-2 text-red-600 cursor-pointer">
                                 <Trash2 className="h-4 w-4" />
                                 Delete Task
                               </DropdownMenuItem> : ""}

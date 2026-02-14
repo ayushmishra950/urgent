@@ -23,6 +23,7 @@ import axios from "axios";
 import { getCompanys, registerAdmin, updateAdmin } from "@/services/Service";
 import { useAuth } from "@/contexts/AuthContext";
 import { EyeOff, Eye, Loader2 } from "lucide-react";
+import CompanyFormDialog from "@/Forms/CompanyFormDialog";
 
 
 interface AdminFormDialogProps {
@@ -55,6 +56,8 @@ const AdminFormDialog: React.FC<AdminFormDialogProps> = ({
   const [companyList, setCompanyList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [refreshCompanyList, setRefreshCompanyList] = useState(false);
 
   const resetFrom = () => {
     setForm({
@@ -82,8 +85,7 @@ const AdminFormDialog: React.FC<AdminFormDialogProps> = ({
 
   useEffect(() => {
     fetchCompanies();
-  }, []);
-  console.log(initialData)
+  }, [refreshCompanyList]);
   // Edit mode data
   useEffect(() => {
     if (initialData && mode === true) {
@@ -132,6 +134,7 @@ const AdminFormDialog: React.FC<AdminFormDialogProps> = ({
       toast({
         title: "Error",
         description: err?.response?.data?.message || "Something went wrong",
+        variant:"destructive"
       });
     } finally {
       setLoading(false);
@@ -139,6 +142,15 @@ const AdminFormDialog: React.FC<AdminFormDialogProps> = ({
   };
 
   return (
+    <>
+       <CompanyFormDialog
+          open={isDialogOpen}
+          setOpen={setIsDialogOpen}
+          initialData={null}
+          onSuccess={setRefreshCompanyList}
+          mode={false}
+        />
+
     <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) { resetFrom() }; setOpen(isOpen) }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
@@ -240,33 +252,58 @@ const AdminFormDialog: React.FC<AdminFormDialogProps> = ({
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label>Company</Label>
+         <div className="space-y-1.5">
+  <Label className="text-sm font-medium">Company</Label>
 
-              <Select
-                value={form.companyId || ""}
-                onValueChange={handleCompanyChange}
-                disabled={companyList?.length === 0} // optional: disable if no companies
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select company" />
-                </SelectTrigger>
-                <SelectContent>
-                  {companyList?.map((company) => (
-                    <SelectItem key={company._id} value={company._id}>
-                      {company.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+  <Select
+    value={form.companyId || ""}
+    onValueChange={handleCompanyChange}
+    disabled={companyList?.length === 0} // disable if no companies
+  >
+    <SelectTrigger className="h-9 sm:h-10 text-sm">
+      <SelectValue placeholder="Select company" />
+    </SelectTrigger>
 
-              {/* 🔴 Conditional message if no companies */}
-              {companyList?.length === 0 && (
-                <p className="text-xs text-red-500 mt-1">
-                  No companies found, please Company Add First.
-                </p>
-              )}
-            </div>
+    {/* Only show content if there are companies */}
+    {companyList?.length > 0 && (
+      <SelectContent className="max-h-48 overflow-y-auto">
+        {companyList.map((company) => (
+          <SelectItem key={company._id} value={company._id}>
+            {company.name}
+          </SelectItem>
+        ))}
+
+        {/* Divider + Add More button */}
+        <div className="border-t my-1" />
+
+        <button
+          type="button"
+          onClick={() => setIsDialogOpen(true)}
+          className="w-full text-left px-2 py-1.5 text-sm text-primary hover:bg-muted rounded-sm"
+        >
+          + Add More Company
+        </button>
+      </SelectContent>
+    )}
+  </Select>
+
+  {/* Show message + add button if no companies */}
+  {companyList?.length === 0 && (
+    <div className="flex items-center justify-between text-xs text-red-500 mt-1">
+      <span>Please add company first</span>
+
+      <Button
+        type="button"
+        size="sm"
+        onClick={() => setIsDialogOpen(true)}
+        className="h-7 px-3 text-xs"
+      >
+        + Add Company
+      </Button>
+    </div>
+  )}
+</div>
+
           </div>
 
           <DialogFooter className="pt-4 flex justify-end gap-2">
@@ -297,7 +334,7 @@ const AdminFormDialog: React.FC<AdminFormDialogProps> = ({
         </form>
       </DialogContent>
     </Dialog>
-
+</>
   );
 };
 

@@ -12,6 +12,7 @@ import { getDepartments, getEmployees } from "@/services/Service";
 import axios from 'axios';
 import { useAuth } from "@/contexts/AuthContext";
 import { Helmet } from "react-helmet-async";
+import { EmployeeFormDialog } from "@/Forms/EmployeeFormDialog"
 
 
 const departmentColors = [
@@ -40,6 +41,9 @@ const Departments: React.FC = () => {
   const [departmentName, setDepartmentName] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState<null | any>(null);
   const [selectedDepartmentEmployees, setSelectedDepartmentEmployees] = useState<any[]>([]);
+  const [employeeListRefresh, setEmployeeListRefresh] = useState(false);
+  const [employeeDialogOpen, setEmployeeDialogOpen] = useState(false);
+  const [selectedDepartmentName, setSelectedDepartmentName] = useState("");
 
   const filteredDepartments = departmentList.filter(
     (dept) =>
@@ -68,7 +72,6 @@ const Departments: React.FC = () => {
   const handleGetEmployees = async () => {
     try {
       const data = await getEmployees(user?.companyId?._id);
-      console.log("employee Data:", data);
       if (Array.isArray(data)) {
         setEmployeeList(data);
       }
@@ -81,13 +84,12 @@ const Departments: React.FC = () => {
     }
   };
 
-
   useEffect(() => {
-    if (!departmentList?.length || departmentRefresh) {
+    if (!departmentList?.length || departmentRefresh || employeeListRefresh) {
       handleGetDepartment();
       handleGetEmployees();
     }
-  }, [departmentRefresh]);
+  }, [departmentRefresh, employeeListRefresh]);
 
   const handleDeleteClick = (employeeId) => {
     console.log(employeeId)
@@ -135,6 +137,15 @@ const Departments: React.FC = () => {
         initialData={initialData}
         mode={isEditDialogOpen}
       />
+       <EmployeeFormDialog
+              open={employeeDialogOpen}
+              onClose={() => { setEmployeeDialogOpen(false) }}
+              isEditMode={null}
+              initialData={null}
+              setEmployeeListRefresh={setEmployeeListRefresh}
+              selectedDepartmentName={selectedDepartmentName}
+
+            />
 
       <DeleteCard
         isOpen={isDeleteDialogOpen}
@@ -144,14 +155,14 @@ const Departments: React.FC = () => {
         title="Delete Department?"
         message="This Action Will Permanently Delete This Department."
       />
-      <div className="mb-4">
-        <button
-          onClick={() => window.history.back()}
-          className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-        </button>
-      </div>
+    <div className="md:mt-[-20px] md:mb-[-10px]">
+      <button
+        onClick={() => window.history.back()}
+        className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+      >
+        <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
+      </button>
+    </div>
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -166,13 +177,22 @@ const Departments: React.FC = () => {
         </div>
 
         {/* Right: Add Department Button */}
+        <div className='flex items-right gap-3'>
         <Button
+          onClick={() => { setEmployeeDialogOpen(true) }}
+          className="flex  gap-2 bg-blue-600 text-white hover:bg-blue-700"
+        >
+          <Plus className="w-4 h-4" />
+          Add Employee
+        </Button>
+         <Button
           onClick={() => { setInitialData(null); setIsEditDialogOpen(false); setIsDialogOpen(true) }}
           className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700"
         >
           <Plus className="w-4 h-4" />
           Add Department
         </Button>
+        </div>
 
       </div>
 
@@ -248,6 +268,10 @@ const Departments: React.FC = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                     <DropdownMenuItem className='cursor-pointer' onClick={() => {setSelectedDepartmentName(dept.name);setEmployeeDialogOpen(true) }}>
+                      <Edit className="w-4 h-4 mr-2" />
+                      Add Employee
+                    </DropdownMenuItem>
                     <DropdownMenuItem className='cursor-pointer' onClick={() => { setInitialData(dept); setIsEditDialogOpen(true); setIsDialogOpen(true) }}>
                       <Edit className="w-4 h-4 mr-2" />
                       Edit
@@ -266,7 +290,7 @@ const Departments: React.FC = () => {
               <div className="flex items-center justify-between pt-4 border-t">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">{dept.employeeCount} employees</span>
+                  <span className="text-sm font-medium">{employeeList.filter((emp) => emp.department === dept.name).length} employees</span>
                 </div>
                 <Button
                   variant="ghost"
@@ -291,10 +315,14 @@ const Departments: React.FC = () => {
 
       {showDepartment && selectedDepartment && (
         <DepartmentCard
+        
           departmentData={selectedDepartment} // pura dept object
           employees={selectedDepartmentEmployees} // us dept ke employees
           onClose={() => setShowDepartment(false)}
           departmentList={filteredDepartments}
+          setEmployeeList={setEmployeeList}
+          setSelectedDepartmentEmployees={setSelectedDepartmentEmployees}
+          refreshList={handleGetEmployees}
         />
       )}
 

@@ -187,13 +187,21 @@ const getSubTasksByCompany = async (req, res) => {
     let subtasks = [];
      if(user?.role ==="admin"){
        subtasks = await SubTask.find({ companyId }).sort({ createdAt: -1 })
-      .populate("taskId", "name")
+      .populate({
+      path: "taskId",
+      select: "name projectId",
+      populate: { path: "projectId", select: "name" }, // nested populate
+    })
       .populate("employeeId", "fullName department")
       .populate("createdBy", "fullName");
      }
      else if(user?.taskRole ==="manager"){
     subtasks = await SubTask.find({createdBy:user?._id, companyId }) .sort({ createdAt: -1 })
-      .populate("taskId", "name")
+     .populate({
+      path: "taskId",
+      select: "name projectId",
+      populate: { path: "projectId", select: "name" }, // nested populate
+    })
       .populate("employeeId", "fullName department")
       .populate("createdBy", "fullName");
      }

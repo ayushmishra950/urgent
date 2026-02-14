@@ -48,11 +48,6 @@ const employeeSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    position: {
-      type: String,
-      trim: true,
-      default: "",
-    },
     roleResponsibility: {
       type: String,
       trim: true,

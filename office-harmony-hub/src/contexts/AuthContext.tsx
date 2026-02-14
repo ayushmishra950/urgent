@@ -28,8 +28,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true);
     try {
       const res = await loginUser(email, password);
-
-  
       if (res.status === 200) {
         toast({
           title: "Login Successfully.",

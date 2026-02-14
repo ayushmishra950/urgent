@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import axios from "axios";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import {addDepartment,updateDepartment } from "@/services/Service";
 
 interface DepartmentData {
   _id: string;
@@ -51,8 +52,8 @@ const DepartmentDialog: React.FC<DepartmentDialogProps> = ({
     e.preventDefault();
     setIsLoading(true);
 
-    if (!name || !description) {
-      toast({ title: "Error", description: "All Fields Are Required." })
+    if (!name ) {
+      toast({ title: "Error", description: "Name Field Are Required." })
       return;
     }
 
@@ -72,28 +73,12 @@ const DepartmentDialog: React.FC<DepartmentDialogProps> = ({
 
       if (mode === true) {
         // 🔄 UPDATE API
-        res = await axios.put(
-          `${import.meta.env.VITE_API_URL}/api/departments/updateDepartment/${initialData?._id}`,
-          obj
-          // {
-          //   headers: {
-          //     Authorization: `Bearer ${localStorage.getItem("token")}`,
-          //   },
-          // }
-        );
+        res = await updateDepartment(initialData?._id, obj)
       } else {
         // ➕ ADD API
-        res = await axios.post(
-          `${import.meta.env.VITE_API_URL}/api/departments/add`,
-          obj
-          // {
-          //   headers: {
-          //     Authorization: `Bearer ${localStorage.getItem("token")}`,
-          //   },
-          // }
-        );
+        res = await addDepartment(obj);
       }
-
+   console.log(res)
       if (res.status === 200 || res.status === 201) {
         toast({
           title: mode ? "Department Updated." : "Department Added.",
@@ -144,7 +129,7 @@ const DepartmentDialog: React.FC<DepartmentDialogProps> = ({
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              placeholder="Describe the department's function"
+              placeholder="Optional: Briefly describe what this department does"
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -154,7 +139,7 @@ const DepartmentDialog: React.FC<DepartmentDialogProps> = ({
             <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading || !name || !description}>
+            <Button type="submit" disabled={isLoading || !name}>
               {isLoading ? (
                 <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <Loader2 className="spin" />

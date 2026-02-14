@@ -56,6 +56,25 @@ export function formatDate(isoDate, format = 'short', locale = 'en-US') {
     }
   }
 
+  
+ export const getStatusColorfromEmployee = (status: string) => {
+
+    switch (status) {
+      case 'ACTIVE': return 'bg-green-100 text-green-800 border-green-500';
+      case 'RELIEVED': return 'bg-red-100 text-red-800 border-red-500';
+      case 'ON_HOLD': return 'bg-yellow-100 text-yellow-800 border-yellow-500';
+      default: return 'bg-gray-100 text-gray-800 border-gray-500';
+    }
+  };
+
+ export const getEventColor = (eventType: string) => {
+    switch (eventType) {
+      case 'Salary Change': return 'bg-purple-100 text-purple-800';
+      case 'Profile Update': return 'bg-teal-100 text-teal-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
 // utils/tasks.ts
 export const getOverdueTasks = (projects: any[], role: string) => {
   const today = new Date();
@@ -142,15 +161,16 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', roles: ['super_admin', 'admin', 'employee'] },
-  { icon: Users, label: 'Employees', path: '/users', roles: ['super_admin', 'admin'] },
   { icon: Building2, label: 'Companies', path: '/companies', roles: ['super_admin'] },
-  { icon: Briefcase, label: 'Departments', path: '/departments', roles: ['admin'] },
   { icon: FolderKanban, label: 'Tasks', path: '/tasks', roles: ['admin', 'employee'] },
   { icon: Clock, label: 'Attendance', path: '/attendance', roles: ['admin', 'employee'] },
   { icon: CalendarDays, label: 'Leave', path: '/leave', roles: ['admin', 'employee'] },
+   { icon: Briefcase, label: 'Departments', path: '/departments', roles: ['admin'] },
+  { icon: Users, label: 'Employees', path: '/users', roles: ['super_admin', 'admin'] },
   { icon: Receipt, label: 'Expenses', path: '/expenses', roles: ['admin'] },
   { icon: Wallet, label: 'Payroll', path: '/payroll', roles: ['admin', 'employee'] },
-  { icon: Bell, label: 'Notifications', path: '/notifications', roles: ['super_admin', 'admin', 'employee'] },
+  // { icon: Bell, label: 'Notifications', path: '/notifications', roles: ['super_admin', 'admin', 'employee'] },
+  { icon: Bell, label: 'Job-Portal', path: '/jobs', roles: ['super_admin', 'admin'] },
   { icon: BarChart3, label: 'Reports', path: '/reports', roles: ['admin'] },
   { icon: Settings, label: 'Settings', path: '/settings', roles: ['super_admin', 'admin', 'employee'] },
 ];
@@ -164,3 +184,46 @@ export const navItems: NavItem[] = [
   { label: 'Overdue Tasks', path: '/tasks/overdue', roles: ["admin", "manager", "employee"] },
   { label: "Task Manager", path: "/tasks/manager", roles: ["admin"] }
 ];
+
+
+export const JobSubMenu = [
+  { label: 'Dashboard', path: '/jobs', roles: ["admin", "manager", "employee"] },
+  { label: 'Candidates', path: '/jobs/candidates', roles: ["admin"] },
+  { label: 'Applications', path: '/jobs/application', roles: ["admin"] },
+  { label: 'Companys', path: '/jobs/companys', roles: ["admin", "manager", "employee"] },
+  { label: 'Jobs', path: '/jobs/jobs', roles: ["admin", "manager"] },
+  { label: 'Revenue', path: '/jobs/revenues', roles: ["admin", "manager", "employee"] },
+  { label: "Setting", path: "/jobs/setting", roles: ["admin"] }
+];
+
+
+
+
+
+  export const getStatusStyle = (status: string) => {
+    switch (status) {
+      case "Present": return { bg: "bg-green-100 text-green-800", text: "Present" };
+      case "Absent": return { bg: "bg-red-100 text-red-800", text: "Absent" };
+      case "Half Day": return { bg: "bg-yellow-100 text-yellow-800", text: "Half Day" };
+      case "Late": return { bg: "bg-orange-100 text-orange-800", text: "Late" };
+      case "No Data": return { bg: "bg-blue-50 text-blue-400", text: "-" };
+      default: return { bg: "bg-gray-100 text-gray-500", text: "-" };
+    }
+  };
+
+  export const getMonthlySummary = (userId: string, attendanceMap) => {
+    const userData = attendanceMap[userId];
+    const summary = { present: 0, absent: 0, halfDay: 0, late: 0 };
+    if (!userData) return summary;
+
+    Object.values(userData.attendanceByDate).forEach((att: any) => {
+      switch (att.status) {
+        case "Present": summary.present++; break;
+        case "Absent": summary.absent++; break;
+        case "Half Day": summary.halfDay++; break;
+        case "Late": summary.late++; break;
+      }
+    });
+
+    return summary;
+  };

@@ -2,55 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  LayoutDashboard,
-  Briefcase,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  MoreHorizontal,
-  FolderOpen,
-  ArrowLeft
-} from "lucide-react";
-
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
+import { LayoutDashboard, Briefcase, CheckCircle2, Clock, AlertCircle, MoreHorizontal, FolderOpen, ArrowLeft} from "lucide-react";
 import { getDashboardData } from "@/services/Service";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate, getStatusColor, getPriorityColor, getTaskCountByStatus, getOverdueTasks } from "@/services/allFunctions";
 import { Helmet } from "react-helmet-async";
-
-// TypeScript interfaces
-interface DashboardSummary {
-  totalProjects: number;
-  totalTasks: number;
-  pending: number;
-  inProgress: number;
-  overdue: number;
-}
-
-interface Project {
-  id: number;
-  name: string;
-  client: string;
-  status: "Pending" | "In Progress" | "Completed" | "Overdue";
-  dueDate: string;
-}
-
-interface Task {
-  id: number;
-  title: string;
-  project: string;
-  status: "Pending" | "In Progress" | "Completed" | "Overdue";
-  assignee: string;
-}
 
 const TaskDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -80,14 +38,14 @@ const TaskDashboard: React.FC = () => {
         <title>Task Page</title>
         <meta name="description" content="This is the home page of our app" />
       </Helmet>
-       <div className="mb-4">
-                          <button
-                            onClick={() => window.history.back()}
-                            className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-                          >
-                            <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-                          </button>
-                        </div>
+      <div className="md:mt-[-20px] md:mb-[-1px]">
+        <button
+          onClick={() => window.history.back()}
+          className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+        >
+          <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
+        </button>
+      </div>
     <div className="flex flex-col min-h-screen bg-gray-50/50 p-6 space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -204,29 +162,47 @@ const TaskDashboard: React.FC = () => {
         </TableRow>
       </TableHeader>
 
-      <TableBody>
-        {userData?.recentProjects?.slice(0, 5).map((project) => (
-          <TableRow key={project._id} className="hover:bg-gray-50 transition-colors">
-            <TableCell className={user?.taskRole === "none" ? "font-medium px-8 py-6" : "font-medium px-4 py-3"}>
-              {project.name}
-            </TableCell>
-            <TableCell className={user?.taskRole === "none" ? "px-8 py-6" : "px-4 py-3"}>
-              {project?.adminId?.username || project?.createdBy?.username || project?.createdBy?.fullName}
-            </TableCell>
-            <TableCell className={user?.taskRole === "none" ? "px-8 py-6" : "px-4 py-3"}>
-              <Badge className={getStatusColor(project.status)} variant="outline">
-                {project.status}
-              </Badge>
-            </TableCell>
-            {user?.taskRole === "none" && (
-              <TableCell className="px-8 py-6">{formatDate(project.startDate)}</TableCell>
-            )}
-            <TableCell className={user?.taskRole === "none" ? "text-right px-8 py-6" : "text-right px-4 py-3"}>
-              {formatDate(project.endDate)}
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
+     <TableBody>
+  {userData?.recentProjects?.length > 0 ? (
+    userData.recentProjects.slice(0, 5).map((project) => (
+      <TableRow key={project._id} className="hover:bg-gray-50 transition-colors">
+        <TableCell className={user?.taskRole === "none" ? "font-medium px-8 py-6" : "font-medium px-4 py-3"}>
+          {project.name}
+        </TableCell>
+
+        <TableCell className={user?.taskRole === "none" ? "px-8 py-6" : "px-4 py-3"}>
+          {project?.adminId?.username || project?.createdBy?.username || project?.createdBy?.fullName}
+        </TableCell>
+
+        <TableCell className={user?.taskRole === "none" ? "px-8 py-6" : "px-4 py-3"}>
+          <Badge className={getStatusColor(project.status)} variant="outline">
+            {project.status}
+          </Badge>
+        </TableCell>
+
+        {user?.taskRole === "none" && (
+          <TableCell className="px-8 py-6">
+            {formatDate(project.startDate)}
+          </TableCell>
+        )}
+
+        <TableCell className={user?.taskRole === "none" ? "text-right px-8 py-6" : "text-right px-4 py-3"}>
+          {formatDate(project.endDate)}
+        </TableCell>
+      </TableRow>
+    ))
+  ) : (
+    <TableRow>
+      <TableCell
+        colSpan={user?.taskRole === "none" ? 5 : 4}
+        className="text-center py-10 text-muted-foreground font-medium"
+      >
+       Data Not Found
+      </TableCell>
+    </TableRow>
+  )}
+</TableBody>
+
     </Table>
   </CardContent>
 </Card>
@@ -283,7 +259,7 @@ const TaskDashboard: React.FC = () => {
                       </div>
                     </div>
                   // ))
-                ) : userData?.length === 0?(
+                ) : userData?.recentTasks?.length === 0?(
                   <div>Data Not Found.</div>
                 ):null}
               </div>

@@ -6,7 +6,8 @@ const {
   getDepartments,
   getDepartmentById,
   updateDepartment,
-  deleteDepartment
+  deleteDepartment,
+  updateEmployeeByDepartment
 } = require("../controllers/departmentController.js");
 
 /**
@@ -190,5 +191,6 @@ router.put("/updateDepartment/:id", updateDepartment);
  *         description: Department not found
  */
 router.delete("/deleteDepartment/:id", deleteDepartment);
+router.patch("/update/employee", updateEmployeeByDepartment);
 
 module.exports = router;

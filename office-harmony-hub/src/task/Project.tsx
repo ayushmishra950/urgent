@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { Plus, MoreHorizontal, Search, Filter, Eye, Edit, UserCheck, Trash2, ArrowLeft } from "lucide-react";
+import { Plus, MoreHorizontal, Search, Filter, Eye, Edit, UserCheck, Trash2, ArrowLeft, CheckSquare  } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,11 +11,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from "
 import ProjectForm from "./forms/ProjectForm";
 import ProjectDetailCard from "./cards/ProjectDetailCard";
 import TaskStatusChangeModal from "./cards/TaskStatusChangeModal";
-import { getProject, projectStatusChange, deleteProject } from "@/services/Service";
+import { getProject, projectStatusChange, deleteProject, getEmployees } from "@/services/Service";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate, getStatusColor, getPriorityColor } from "@/services/allFunctions";
 import DeleteCard from "@/components/cards/DeleteCard";
+import { useNavigate } from "react-router-dom";
+import TaskForm from "./forms/TaskForm";
+import SubTaskForm from "./forms/SubTaskForm";
 
 type Priority = 'low' | 'medium' | 'high' | 'urgent';
 interface ProjectItem {
@@ -44,17 +47,64 @@ const Project: React.FC = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
+    const [taskOpenForm, setTaskOpenForm] = useState(false);
+  const [subTaskOpenForm, setSubTaskOpenForm] = useState(false);
+  const [taskId, setTaskId] = useState("");
+  const [taskListRefresh, setTaskListRefresh] = useState(false);
+  const [subTaskListRefresh, setSubTaskListRefresh] = useState(false);
+  const [projectId, setProjectId] = useState("");
+    const [employeeList, setEmployeeList] = useState<any[]>([]);
+  
+
+  const navigate = useNavigate();
 
   const today = new Date();
 
-const filteredProjects = projects.filter((t) => {
-  const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase());
+  const filteredProjects = projects.filter((t) => {
+    const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase());
 
-  const matchesStatus = filterStatus === "all" || (filterStatus === "overdue"
+    const matchesStatus = filterStatus === "all" || (filterStatus === "overdue"
       ? new Date(t.endDate) < today : t.status === filterStatus);
 
-  return matchesSearch && matchesStatus;
-});
+    return matchesSearch && matchesStatus;
+  });
+
+  
+    // =================== Fetch Employees ===================
+    const handleGetEmployees = async () => {
+      try {
+        const data = await getEmployees(user?.companyId?._id);
+        if (Array.isArray(data)) setEmployeeList(data);
+      } catch (err: any) {
+        toast({
+          title: "Error",
+          description: err?.response?.data?.message || "Something went wrong",
+          variant: "destructive",
+        });
+      }
+    };
+    useEffect(()=>{
+      handleGetEmployees();
+    }, [])
+
+     const handleOpenProjectForm = () => {
+  // 1️⃣ No employees
+  if (!employeeList || employeeList.length === 0) {
+    return toast({ title: "No Employees Found", description: "Please add at least one employee before creating a project.", variant: "destructive" });
+  }
+
+  // 2️⃣ Check if at least one manager exists
+  const hasManager = employeeList.some(
+    (emp) => emp?.taskRole && emp.taskRole !== "none"
+  );
+  if (!hasManager) {
+    return toast({ title: "Manager Required", description: "Please assign at least one employee as a manager before creating a project.", variant: "destructive" });
+  }
+  // 3️⃣ All good
+  setInitialData(null);
+  setIsFormOpen(true);
+};
+
 
   const handleChangeStatus = async () => {
     let obj = { adminId: user?._id, companyId: user?.companyId?._id, projectId: selectedProject?._id, status: newStatus }
@@ -123,6 +173,20 @@ const filteredProjects = projects.filter((t) => {
 
   return (
     <>
+      <TaskForm
+        isOpen={taskOpenForm}
+        onClose={() => setTaskOpenForm(false)}
+        initialData={null}
+        setTaskListRefresh={setTaskListRefresh}
+        projectId={projectId}
+      />
+      <SubTaskForm
+        isOpen={subTaskOpenForm}
+        taskId={null}
+        setSubTaskListRefresh={setSubTaskListRefresh}
+        onClose={() => setSubTaskOpenForm(false)}
+        initialData={null}
+      />
       <DeleteCard
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
@@ -135,14 +199,14 @@ const filteredProjects = projects.filter((t) => {
       <ProjectDetailCard isOpen={isProjectDetailOpen} onClose={() => setIsProjectDetailOpen(false)} projectId={selectedProjectId} />
       <TaskStatusChangeModal name={name} task={selectedProject} isOpen={isTaskStatusChangeModalOpen} newStatus={newStatus} setNewStatus={setNewStatus} onConfirm={handleChangeStatus} onClose={() => setIsTaskStatusChangeModalOpen(false)} />
       <div className="flex flex-col min-h-screen bg-gray-50/50 p-3 sm:p-6 space-y-6 max-w-[100vw] sm:max-w-none">
-        <div className="mb-4">
-                          <button
-                            onClick={() => window.history.back()}
-                            className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-                          >
-                            <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-                          </button>
-                        </div>
+        <div className="md:mt-[-45px] md:mb-[-15px]">
+          <button
+            onClick={() => window.history.back()}
+            className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
+          </button>
+        </div>
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -155,7 +219,7 @@ const filteredProjects = projects.filter((t) => {
           </div>
           <Button
             className="w-full sm:w-auto"
-            onClick={() => { setInitialData(null); setIsFormOpen(true) }}
+            onClick={handleOpenProjectForm}
           >
             <Plus className="mr-2 h-4 w-4" />
             Create Project
@@ -214,7 +278,7 @@ const filteredProjects = projects.filter((t) => {
                 <TableBody>
                   {filteredProjects.length ? (
                     filteredProjects.map((project) => (
-                      <TableRow key={project._id}>
+                      <TableRow key={project._id} className="cursor-pointer" onClick={() => { navigate("/tasks/task", { state: { id: project?._id, name:project?.name } }) }}>
                         <TableCell className="font-medium whitespace-nowrap">
                           {project.name}
                         </TableCell>
@@ -238,17 +302,23 @@ const filteredProjects = projects.filter((t) => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-44">
-                              <DropdownMenuItem onClick={() => {setSelectedProjectId(project?._id);setIsProjectDetailOpen(true)}} className="flex items-center gap-2 cursor-pointer">
+                                <DropdownMenuItem onClick={(e) => {e.stopPropagation();setProjectId(project?._id); setTaskOpenForm(true) }} className="flex items-center gap-2 cursor-pointer">
+                                <CheckSquare  className="h-4 w-4 text-gray-600" />
+                                Add Task
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuItem onClick={(e) => {e.stopPropagation(); setSelectedProjectId(project?._id); setIsProjectDetailOpen(true) }} className="flex items-center gap-2 cursor-pointer">
                                 <Eye className="h-4 w-4 text-gray-600" />
                                 View
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => { setSelectedProject(project); setIsTaskStatusChangeModalOpen(true) }} className="flex items-center gap-2 cursor-pointer">
+                              <DropdownMenuItem onClick={(e) => {e.stopPropagation(); setSelectedProject(project); setIsTaskStatusChangeModalOpen(true) }} className="flex items-center gap-2 cursor-pointer">
                                 <Filter className="h-4 w-4 text-blue-600" />
                                 Change Status
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="flex items-center gap-2 cursor-pointer"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setInitialData(project);
                                   setIsFormOpen(true);
                                 }}
@@ -259,7 +329,7 @@ const filteredProjects = projects.filter((t) => {
 
                               <DropdownMenuSeparator />
 
-                              <DropdownMenuItem onClick={()=>{setSelectedProjectId(project?._id);setIsDeleteDialogOpen(true)}} className="flex items-center gap-2 text-red-600 cursor-pointer">
+                              <DropdownMenuItem onClick={(e) => {e.stopPropagation(); setSelectedProjectId(project?._id); setIsDeleteDialogOpen(true) }} className="flex items-center gap-2 text-red-600 cursor-pointer">
                                 <Trash2 className="h-4 w-4" />
                                 Delete
                               </DropdownMenuItem>

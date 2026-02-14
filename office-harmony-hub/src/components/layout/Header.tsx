@@ -30,17 +30,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
   return (
     <header className="sticky top-0 z-20 bg-card border-b border-border px-4 lg:px-6 py-4">
-      <div className="flex items-center justify-between gap-4">
-        {/* Menu button - mobile & desktop */}
-        <button
-          onClick={onMenuClick}
-          className="p-2 rounded-lg hover:bg-muted"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
-
+      <div className="flex items-center justify-end gap-4">
         {/* Search */}
-        <div className="hidden md:flex flex-1 max-w-md">
+        {/* <div className="hidden md:flex flex-1 max-w-md">
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -48,7 +40,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
               className="pl-10 bg-muted/50 border-0 focus-visible:ring-1"
             />
           </div>
-        </div>
+        </div> */}
 
         {/* Right side */}
         <div className="flex items-center gap-3">

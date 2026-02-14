@@ -8,7 +8,8 @@ const {
   updateCompany,
   deleteCompany,
   assignAdmin,
-  getCompanyDepartments
+  getCompanyDepartments,
+  getCompaniesFromDashboard
 } = require("../controllers/companyController");
 const upload = require("../middleware/upload.js");
 
@@ -40,5 +41,7 @@ router.post("/assign-admin", assignAdmin);
 // ---------------- Add Department to Company ----------------
 // POST /api/companies/add-department
 router.post("/add-department", getCompanyDepartments);
+
+router.get("/company/dashboard/:id", getCompaniesFromDashboard)
 
 module.exports = router;

@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
+import {Helmet} from "react-helmet-async";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -48,6 +49,10 @@ const Login: React.FC = () => {
 };
 
   return (
+    <>   <Helmet>
+                  <title>Login Page</title>
+                  <meta name="description" content="This is the home page of our app" />
+                </Helmet>
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-8">
         {/* Logo */}
@@ -116,6 +121,7 @@ const Login: React.FC = () => {
         </p>
       </div>
     </div>
+    </>
   );
 };
 

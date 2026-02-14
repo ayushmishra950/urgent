@@ -7,12 +7,12 @@ import Header from './Header';
 import { cn } from '@/lib/utils';
 
 const MainLayout: React.FC = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Start closed
+  const [sidebarOpen, setSidebarOpen] = useState(true); // Start closed
 
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const toggleSidebar = () => {setSidebarOpen(!sidebarOpen);};
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
+    <div className={`transition-all duration-300 flex-1 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
       {/* Sidebar only renders when open */}
       <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
 

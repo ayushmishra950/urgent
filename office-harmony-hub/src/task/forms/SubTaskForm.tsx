@@ -1,176 +1,653 @@
-import React, { useState, useEffect } from "react";
+// import React, { useState, useEffect } from "react";
+// import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+// import { Input } from "@/components/ui/input";
+// import { Label } from "@/components/ui/label";
+// import { Button } from "@/components/ui/button";
+// import { Textarea } from "@/components/ui/textarea";
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+// import { AwardIcon, Loader2 } from "lucide-react";
+// import { Priority, Status } from "@/types";
+// import { useAuth } from "@/contexts/AuthContext";
+// import { useToast } from "@/hooks/use-toast";
+// import { getTask, getEmployeebyDepartment, addSubTask, updateSubTask } from "@/services/Service";
+// import { formatDateFromInput } from "@/services/allFunctions";
+// import { SubTaskFormData, SubTaskFormModalProps } from "@/types/index";
+// import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+// import TaskForm from "./TaskForm";
+
+// const SubTaskForm: React.FC<SubTaskFormModalProps> = ({
+//   isOpen,
+//   onClose,
+//   initialData,
+//   setSubTaskListRefresh,
+//   taskId
+// }) => {
+//   const { user } = useAuth();
+//   const { toast } = useToast();
+//   const [taskForm, setTaskForm] = useState<SubTaskFormData>({});
+//   const [loading, setLoading] = useState(false);
+//   const [taskList, setTaskList] = useState([]);
+//   const [employeeList, setEmployeeList] = useState([])
+//   const [startDateTouched, setStartDateTouched] = useState(false);
+//   const [localIsEdit, setLocalIsEdit] = useState(false);
+//   const [confirmOpen, setConfirmOpen] = useState(false);
+//   const [pendingPayload, setPendingPayload] = useState<any>(null);
+//   const [isFormOpen, setIsFormOpen] = useState(false);
+//   const [taskListRefresh, setTaskListRefresh] = useState(false);
+
+
+//   const isEdit = Boolean(initialData);
+//   const today = new Date().toISOString().split("T")[0];
+
+//   useEffect(()=>{
+//     console.log(taskId)
+//     if(taskId){
+//        setTaskForm((prev) => ({ ...prev, taskId: taskId }));
+//     }
+//   }, [taskId])
+//   useEffect(() => {
+//     const initializeForm = async () => {
+//       if (!isOpen) return;
+//       console.log(initialData)
+//       if (initialData?._id || taskId) {
+//         setLocalIsEdit(true);
+
+//         // 1. Pehle Parent Task ki details nikalen API call ke liye
+//         const selectedTaskId = taskId? taskId : initialData.taskId?._id || initialData.taskId;
+//         const selectedTask = taskList.find(t => t._id === selectedTaskId);
+//         console.log(selectedTask, taskList, selectedTaskId)
+
+//         if (!user?.companyId?._id && !user?.createdBy?._id) return;
+
+//         if (selectedTask) {
+//           const obj = {
+//             taskId: selectedTask._id,
+//             department: selectedTask.managerId?.department,
+//             companyId: user?.companyId?._id || user?.createdBy?._id,
+//             adminId: user._id
+//           };
+//           try {
+//             // 2. API Call karke puri list fetch karein (Await karein)
+//             const res = await getEmployeebyDepartment(obj);
+//             console.log(res)
+//             if (res.status === 200) {
+//               setEmployeeList(res.data.data);
+
+//               // 3. JAB LIST AA JAYE, tab form state update karein
+//               setTaskForm({
+//                 _id: initialData._id,
+//                 taskId: selectedTaskId,
+//                 name: initialData.name,
+//                 description: initialData.description,
+//                 startDate: formatDateFromInput(initialData.startDate),
+//                 endDate: formatDateFromInput(initialData.endDate),
+//                 // Ab list ready hai, toh yeh value Select mein show hogi
+//                 employee: initialData.employeeId?._id || initialData.employeeId || "",
+//                 priority: initialData.priority,
+//                 remarks: initialData.remarks
+//               });
+//             }
+//           } catch (err) {
+//             console.error("Error fetching employees on refresh:", err);
+//           }
+//         } else {
+//           // Fallback: Agar task list abhi nahi aayi, toh sirf initial data wala employee list mein daalein
+//           const fallbackEmp = initialData.employeeId ? [initialData.employeeId] : [];
+//           setEmployeeList(fallbackEmp);
+//           // ... setTaskForm logic yahan bhi repeat kar sakte hain
+//         }
+//       } else {
+//         // Create Mode Logic
+//         setLocalIsEdit(false);
+//         setTaskForm({});
+//         setEmployeeList([]);
+//       }
+//     };
+
+//     initializeForm();
+//   }, [isOpen, initialData, taskList, taskId]); // taskList add kiya taaki refresh ke baad list aate hi trigger ho
+
+//   // ---------------------------------------------------
+//   const handleParentTaskChange = async (taskId) => {
+//     if (localIsEdit || initialData?._id) return;
+
+//     const selectedTask = taskList.find(t => t._id === taskId);
+//     if (!selectedTask) return;
+
+//     if ((!user?.companyId?._id && !user?.createdBy?._id) || !user?._id) return;
+
+//     const obj = {
+//       taskId: selectedTask._id,
+//       department: selectedTask.managerId?.department,
+//       companyId: user?.companyId?._id || user?.createdBy?._id,
+//       adminId: user._id
+//     };
+//     try {
+//       const res = await getEmployeebyDepartment(obj);
+//       console.log(res)
+//       if (res.status === 200) {
+//         setEmployeeList(res.data.data);
+//         // Reset employee field on create
+//         if (!isEdit && !initialData) {
+//           setTaskForm(prev => ({ ...prev, taskId: selectedTask._id, employee: "" }));
+//         }
+//       }
+//     } catch (err) {
+//       toast({ title: "Error", description: err.response?.data?.message, variant: "destructive" });
+//     }
+//   };
+
+//   const handleSave = async (e?: React.FormEvent, forceCreate: boolean = false) => {
+//     e?.preventDefault();
+//     const obj = {
+//       _id: initialData?._id,
+//       companyId: user?.companyId?._id || user?.createdBy?._id,
+//       taskId: taskForm?.taskId,
+//       createdBy: user?._id,
+//       createdByRole: user?.role === "admin" ? "Admin" : "Employee",
+//       employeeId: taskForm?.employee,
+//       name: taskForm?.name,
+//       description: taskForm?.description,
+//       remarks: taskForm?.remarks,
+//       startDate: taskForm?.startDate,
+//       endDate: taskForm?.endDate,
+//       priority: taskForm?.priority,
+//       forceCreate,
+//     };
+//     setLoading(true);
+
+//     try {
+//       let res = null;
+//       if (isEdit) {
+//         res = await updateSubTask(obj);
+//       } else {
+//         res = await addSubTask(obj);
+//       }
+
+//       if (res.data?.warning) {
+//         setPendingPayload(obj);
+//         setConfirmOpen(true);
+//         return;
+//       }
+
+//       if (res.status === 200 || res.status === 201) {
+//         // ✅ Success
+//         onClose();
+//         setSubTaskListRefresh(true);
+//         toast({
+//           title: isEdit ? "Update Sub Task Successfully" : "Add Sub Task Successfully",
+//           description: res.data.message,
+//         });
+//       } else {
+//         toast({
+//           title: isEdit ? "Update Sub Task Failed" : "Add Sub Task Failed",
+//           description: res.data.message,
+//         });
+//       }
+//     } catch (err: any) {
+//       console.error(err);
+//       toast({
+//         title: "Error",
+//         description: err.response?.data?.message || err.message,
+//         variant: "destructive",
+//       });
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+
+//   const handleGetTask = async () => {
+//     if (!user?._id || (!user?.companyId?._id && !user?.createdBy?._id)) { return }
+//     let obj = { companyId: user?.companyId?._id || user?.createdBy?._id, adminId: user?._id }
+//     try {
+//       const res = await getTask(obj);
+//       console.log(res)
+//       if (res.status === 200) {
+//         setTaskList(Array.isArray(res?.data?.data) ? res?.data?.data : Object.values(res?.data?.data));
+//       }
+//     }
+//     catch (err) {
+//       console.log(err);
+//       return toast({ title: "Error", description: err.response.data.message, variant: "destructive" })
+//     }
+//   }
+
+//   useEffect(() => {
+//     if (!isOpen) return;
+//     if (!taskList.length || taskListRefresh) handleGetTask();
+//   }, [isOpen, taskListRefresh]);
+
+//   return (
+//     <>
+//       <TaskForm
+//       projectId={null}
+//         isOpen={isFormOpen}
+//         onClose={() => setIsFormOpen(false)}
+//         initialData={null}
+//         setTaskListRefresh={setTaskListRefresh}
+//       />
+
+//       {/* ⚠️ AlertDialog for existing active subtasks */}
+//       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+//         <AlertDialogContent>
+//           <AlertDialogHeader>
+//             <AlertDialogTitle>
+//               Employee already has active tasks
+//             </AlertDialogTitle>
+//             <AlertDialogDescription>
+//               Do you still want to assign this task?
+//             </AlertDialogDescription>
+//           </AlertDialogHeader>
+
+//           <AlertDialogFooter>
+//             <AlertDialogCancel>Cancel</AlertDialogCancel>
+//             <AlertDialogAction
+//               onClick={() => {
+//                 setConfirmOpen(false);
+//                 handleSave(undefined, true); // 🔥 forceCreate
+//               }}
+//             >
+//               Continue
+//             </AlertDialogAction>
+//           </AlertDialogFooter>
+//         </AlertDialogContent>
+//       </AlertDialog>
+
+//       <Dialog open={isOpen} onOpenChange={onClose}>
+//         <DialogContent className="sm:max-w-[650px] max-h-[80vh] sm:max-h-[90vh] overflow-y-auto w-[95vw] pb-6">
+//           <form onSubmit={handleSave}>
+//             <DialogHeader>
+//               <DialogTitle>{isEdit ? "Edit Sub-Task" : "Create New Sub-Task"}</DialogTitle>
+//             </DialogHeader>
+//             <div className="grid gap-4 py-4">
+//               {/* Row: Project & Task Name */}
+//               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+//                 <div className="grid gap-2">
+//                   <Label htmlFor="parentTask">Parent Task</Label>
+
+//                   <Select
+//                     value={taskForm?.taskId?.toString() || ""}
+//                     onValueChange={handleParentTaskChange}
+//                     disabled={taskList?.length === 0} // disable if no tasks
+//                   >
+//                     <SelectTrigger id="parentTask" className="h-9 sm:h-10 text-sm">
+//                       <SelectValue placeholder="Select Parent Task" />
+//                     </SelectTrigger>
+
+//                     {taskList?.length > 0 && (
+//                       <SelectContent className="max-h-48 overflow-y-auto">
+//                         {taskList.map((p) => (
+//                           <SelectItem key={p._id} value={p._id} className="cursor-pointer">
+//                             {p.name}
+//                           </SelectItem>
+//                         ))}
+
+//                         {/* Divider + Add New Task button */}
+//                         <div className="border-t my-1" />
+//                         <button
+//                           type="button"
+//                           onClick={() => setIsFormOpen(true)}
+//                           className="w-full text-left px-2 py-1.5 text-sm text-primary hover:bg-muted rounded-sm"
+//                         >
+//                           + Add New Parent Task
+//                         </button>
+//                       </SelectContent>
+//                     )}
+//                   </Select>
+
+//                   {/* Message + Add button if no tasks */}
+//                   {taskList?.length === 0 && (
+//                     <div className="flex items-center justify-between text-xs text-red-500 mt-1">
+//                       <span>Please add a parent task first</span>
+//                       <Button
+//                         type="button"
+//                         size="sm"
+//                         onClick={() => setIsFormOpen(true)}
+//                         className="h-7 px-3 text-xs"
+//                       >
+//                         + Add Task
+//                       </Button>
+//                     </div>
+//                   )}
+//                 </div>
+
+//                 <div className="grid gap-2">
+//                   <Label htmlFor="taskName">Sub Task Name</Label>
+//                   <Input
+//                     id="taskName"
+//                     placeholder="Enter task name"
+//                     value={taskForm?.name || ""}
+//                     onChange={(e) => setTaskForm({ ...taskForm, name: e.target.value })} />
+//                 </div>
+//               </div>
+//               {/* Description */}
+//               <div className="grid gap-2">
+//                 <Label htmlFor="description">Description</Label>
+//                 <Textarea
+//                   id="description"
+//                   placeholder="Enter task description"
+//                   rows={3}
+//                   value={taskForm?.description || ""}
+//                   onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })} />
+//               </div>
+//               {/* Row: Start Date & End Date */}
+//               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+//                 <div className="grid gap-2">
+//                   <Label htmlFor="startDate">Start Date</Label>
+//                   <Input
+//                     id="startDate"
+//                     type="date"
+//                     value={taskForm?.startDate || ""}
+//                     min={isEdit ? startDateTouched ? today : taskForm?.startDate || today : today}
+//                     onChange={(e) => {
+//                       setStartDateTouched(true);
+//                       setTaskForm({
+//                         ...taskForm, startDate: e.target.value,
+//                         // agar start date change hui aur end date usse chhoti hai to reset
+//                         endDate: taskForm.endDate && e.target.value && taskForm.endDate < e.target.value ? "" : taskForm.endDate
+//                       })
+//                     }} />
+//                 </div>
+//                 <div className="grid gap-2">
+//                   <Label htmlFor="endDate">End Date</Label>
+//                   <Input
+//                     id="endDate"
+//                     type="date"
+//                     value={taskForm?.endDate || ""}
+//                     min={taskForm?.startDate || today}
+//                     disabled={!taskForm?.startDate} // start date ke bina end date disabled
+//                     onChange={(e) => setTaskForm({ ...taskForm, endDate: e.target.value })} />
+//                   {!taskForm?.startDate && (
+//                     <p className="text-xs text-muted-foreground">
+//                       Please select start date first
+//                     </p>
+//                   )}
+//                 </div>
+//               </div>
+//               {/* Row: Manager & Priority */}
+//               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+//                 <div className="grid gap-1">
+//                   <Label htmlFor="manager">Employee</Label>
+//                   <Select
+//                     disabled={!taskForm?.taskId}
+//                     value={taskForm?.employee || ""}
+//                     onValueChange={(value) => setTaskForm({ ...taskForm, employee: value })}>
+//                     <SelectTrigger id="manager">
+//                       <SelectValue placeholder="Select Employee" />
+//                     </SelectTrigger>
+//                     <SelectContent>
+//                       {employeeList.map(emp => (
+//                         <SelectItem key={emp._id} value={emp._id} className="cursor-pointer" disabled={emp?.taskRole === "manager"}>
+//                           {emp.fullName} ({emp.department}) {emp.taskRole === "manager" ? "Manager" : ""}
+//                         </SelectItem>
+//                       ))}
+//                     </SelectContent>
+//                   </Select>
+//                   {!taskForm?.taskId && (
+//                     <p className="text-xs text-muted-foreground">
+//                       Please select parent task first
+//                     </p>
+//                   )}
+//                 </div>
+//                 <div className="grid gap-2">
+//                   <Label htmlFor="priority">Priority</Label>
+//                   <Select
+//                     value={taskForm?.priority || "low"}
+//                     onValueChange={(value) => setTaskForm({ ...taskForm, priority: value as Priority })} >
+//                     <SelectTrigger id="priority">
+//                       <SelectValue placeholder="Select Priority" />
+//                     </SelectTrigger>
+//                     <SelectContent>
+//                       <SelectItem value="low" className="cursor-pointer">Low</SelectItem>
+//                       <SelectItem value="medium" className="cursor-pointer">Medium</SelectItem>
+//                       <SelectItem value="high" className="cursor-pointer">High</SelectItem>
+//                       <SelectItem value="urgent" className="cursor-pointer">Urgent</SelectItem>
+//                     </SelectContent>
+//                   </Select>
+//                 </div>
+//               </div>
+//               {/* Remarks */}
+//               <div className="grid gap-2">
+//                 <Label htmlFor="remarks">Remarks</Label>
+//                 <Textarea
+//                   id="remarks"
+//                   placeholder="Additional comments or remarks"
+//                   rows={2}
+//                   value={taskForm?.remarks || ""}
+//                   onChange={(e) => setTaskForm({ ...taskForm, remarks: e.target.value })} />
+//               </div>
+//             </div>
+
+//             <DialogFooter className="flex-col-reverse sm:flex-row gap-2 sticky bottom-0 bg-white pt-4">
+//               <Button type="button" variant="outline" onClick={onClose} disabled={loading} className="w-full sm:w-auto">
+//                 Cancel
+//               </Button>
+//               <Button
+//                 disabled={loading || !taskForm?.name || !taskForm?.description || !taskForm?.startDate || !taskForm?.endDate || !taskForm?.employee || !taskForm?.priority || !taskForm?.remarks}
+//                 className="w-full sm:w-auto" >
+//                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+//                 {isEdit ? "Update Sub-Task" : "Create Sub-Task"}
+//               </Button>
+//             </DialogFooter>
+//           </form>
+//         </DialogContent>
+//       </Dialog>
+//     </>
+//   );
+// };
+
+// export default SubTaskForm;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AwardIcon, Loader2 } from "lucide-react";
-import { Priority, Status } from "@/types";
+import { Loader2, ChevronDown } from "lucide-react";
+import { Priority, SubTaskFormModalProps, SubTaskFormData } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { getTask, getEmployeebyDepartment, addSubTask, updateSubTask } from "@/services/Service";
 import { formatDateFromInput } from "@/services/allFunctions";
-import {TaskFormData, TaskFormModalProps} from "@/types/index";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle} from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import TaskForm from "./TaskForm";
 
-const SubTaskForm: React.FC<TaskFormModalProps> = ({
+const SubTaskForm: React.FC<SubTaskFormModalProps> = ({
   isOpen,
   onClose,
   initialData,
-  setSubTaskListRefresh
+  setSubTaskListRefresh,
+  taskId
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [taskForm, setTaskForm] = useState<TaskFormData>({});
+  const [taskForm, setTaskForm] = useState<SubTaskFormData>({});
   const [loading, setLoading] = useState(false);
-  const [taskList, setTaskList] = useState([]);
-  const [employeeList, setEmployeeList] = useState([])
+  const [taskList, setTaskList] = useState<any[]>([]);
+  const [employeeList, setEmployeeList] = useState<any[]>([]);
   const [startDateTouched, setStartDateTouched] = useState(false);
-const [localIsEdit, setLocalIsEdit] = useState(false);
+  const [localIsEdit, setLocalIsEdit] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
- const [pendingPayload, setPendingPayload] = useState<any>(null);
+  const [pendingPayload, setPendingPayload] = useState<any>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [taskListRefresh, setTaskListRefresh] = useState(false);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showScrollArrow, setShowScrollArrow] = useState(false);
 
   const isEdit = Boolean(initialData);
   const today = new Date().toISOString().split("T")[0];
-useEffect(() => {
-  const initializeForm = async () => {
+
+  // Scroll detection
+  const checkScrollable = () => {
+    if (!scrollRef.current) return;
+    const { scrollHeight, clientHeight } = scrollRef.current;
+    setShowScrollArrow(scrollHeight > clientHeight + 5);
+  };
+
+  useEffect(() => {
     if (!isOpen) return;
-     console.log(initialData)
-    if (initialData?._id) {
-      setLocalIsEdit(true);
-      
-      // 1. Pehle Parent Task ki details nikalen API call ke liye
-      const selectedTaskId = initialData.taskId?._id || initialData.taskId;
-      const selectedTask = taskList.find(t => t._id === selectedTaskId);
-      console.log(selectedTask, taskList, selectedTaskId)
+    checkScrollable();
+    const timer = setTimeout(checkScrollable, 400);
+    const ro = new ResizeObserver(checkScrollable);
+    if (scrollRef.current) ro.observe(scrollRef.current);
+    return () => {
+      clearTimeout(timer);
+      ro.disconnect();
+    };
+  }, [isOpen, taskForm, employeeList, taskList, isFormOpen]);
 
-      if(!user?.companyId?._id && !user?.createdBy?._id) return;
+  useEffect(() => {
+    if (taskId) {
+      setTaskForm(prev => ({ ...prev, taskId }));
+    }
+  }, [taskId]);
 
-      if (selectedTask) {
-        const obj = {
-          taskId: selectedTask._id,
-          department: selectedTask.managerId?.department,
-          companyId: user?.companyId?._id || user?.createdBy?._id,
-          adminId: user._id
-        };
-        try {
-          // 2. API Call karke puri list fetch karein (Await karein)
-          const res = await getEmployeebyDepartment(obj);
-          console.log(res)
-          if (res.status === 200) {
-            setEmployeeList(res.data.data);
-            
-            // 3. JAB LIST AA JAYE, tab form state update karein
-            setTaskForm({
-              _id: initialData._id,
-              taskId: selectedTaskId,
-              name: initialData.name,
-              description: initialData.description,
-              startDate: formatDateFromInput(initialData.startDate),
-              endDate: formatDateFromInput(initialData.endDate),
-              // Ab list ready hai, toh yeh value Select mein show hogi
-              employee: initialData.employeeId?._id || initialData.employeeId || "",
-              priority: initialData.priority,
-              remarks: initialData.remarks
-            });
+  useEffect(() => {
+    const initializeForm = async () => {
+      if (!isOpen) return;
+
+      if (initialData?._id || taskId) {
+        setLocalIsEdit(true);
+        const selectedTaskId = taskId || initialData?.taskId?._id || initialData?.taskId;
+
+        if (!user?._id || (!user?.companyId?._id && !user?.createdBy?._id)) return;
+
+        // Try to find task in already loaded list first
+        let selectedTask = taskList.find(t => t._id === selectedTaskId);
+
+        if (!selectedTask && selectedTaskId) {
+          // If not found → fetch tasks again (fallback)
+          await handleGetTask();
+          selectedTask = taskList.find(t => t._id === selectedTaskId);
+        }
+
+        if (selectedTask) {
+          const obj = {
+            taskId: selectedTask._id,
+            department: selectedTask.managerId?.department,
+            companyId: user?.companyId?._id || user?.createdBy?._id,
+            adminId: user._id
+          };
+          try {
+            const res = await getEmployeebyDepartment(obj);
+            if (res.status === 200) {
+              setEmployeeList(res.data.data || []);
+              setTaskForm({
+                _id: initialData?._id,
+                taskId: selectedTaskId,
+                name: initialData?.name,
+                description: initialData?.description,
+                startDate: formatDateFromInput(initialData?.startDate),
+                endDate: formatDateFromInput(initialData?.endDate),
+                employee: initialData?.employeeId?._id || initialData?.employeeId || "",
+                priority: initialData?.priority,
+                remarks: initialData?.remarks
+              });
+            }
+          } catch (err) {
+            console.error("Error fetching employees:", err);
           }
-        } catch (err) {
-          console.error("Error fetching employees on refresh:", err);
         }
       } else {
-        // Fallback: Agar task list abhi nahi aayi, toh sirf initial data wala employee list mein daalein
-        const fallbackEmp = initialData.employeeId ? [initialData.employeeId] : [];
-        setEmployeeList(fallbackEmp);
-        // ... setTaskForm logic yahan bhi repeat kar sakte hain
+        setLocalIsEdit(false);
+        setTaskForm({ taskId });
+        setEmployeeList([]);
       }
-    } else {
-      // Create Mode Logic
-      setLocalIsEdit(false);
-      setTaskForm({});
-      setEmployeeList([]);
-    }
-  };
+    };
 
-  initializeForm();
-}, [isOpen, initialData, taskList]); // taskList add kiya taaki refresh ke baad list aate hi trigger ho
+    initializeForm();
+  }, [isOpen, initialData, taskId, taskList]);
 
-// ---------------------------------------------------
-const handleParentTaskChange = async (taskId) => {
- if (localIsEdit || initialData?._id) return; 
+  const handleParentTaskChange = async (selectedTaskId: string) => {
+    if (isEdit || initialData?._id) return; // don't allow change in edit mode
 
-  const selectedTask = taskList.find(t => t._id === taskId);
-  if (!selectedTask) return;
+    const selectedTask = taskList.find(t => t._id === selectedTaskId);
+    if (!selectedTask) return;
 
-  if ((!user?.companyId?._id&& !user?.createdBy?._id) || !user?._id) return;
-
-  const obj = {
-    taskId: selectedTask._id,
-    department: selectedTask.managerId?.department,
-    companyId: user?.companyId?._id || user?.createdBy?._id,
-    adminId: user._id
-  };
-  try {
-    const res = await getEmployeebyDepartment(obj);
-    console.log(res)
-    if (res.status === 200) {
-      setEmployeeList(res.data.data);
-      // Reset employee field on create
-     if (!isEdit && !initialData) {
-  setTaskForm(prev => ({ ...prev, taskId: selectedTask._id, employee: "" }));
-}
-    }
-  } catch (err) {
-    toast({ title: "Error", description: err.response?.data?.message, variant: "destructive"});
-  }
-};
-
-  // const handleSave = async (e?: React.FormEvent) => {
-  //   e?.preventDefault();
-  //   let obj = {
-  //     _id: initialData?._id,
-  //     companyId: user?.companyId?._id || user?.createdBy?._id,
-  //     taskId: taskForm?.taskId,
-  //     createdBy: user?._id,
-  //     createdByRole: user?.role === "admin" ? "Admin" : "Employee",
-  //     employeeId: taskForm?.employee,
-  //     name: taskForm?.name,
-  //     description: taskForm?.description,
-  //     remarks: taskForm?.remarks,
-  //     startDate: taskForm?.startDate,
-  //     endDate: taskForm?.endDate,
-  //     priority: taskForm?.priority,
-  //   };
-  //   setLoading(true);
-  //   try {
-  //     let res = null;
-  //     if (isEdit === true) {  res = await updateSubTask(obj);}
-  //     else { res = await addSubTask(obj);}
-  //     if (res.status === 200 || res.status === 201) {
-  //       onClose();
-  //       setSubTaskListRefresh(true);
-  //       return toast({ title: `${isEdit ? "Update Sub Task Successfully" : "Add Sub Task Successfully"}`, description: res.data.message })
-  //     }
-  //     else {
-  //       setLoading(false)
-  //       return toast({ title: `${isEdit ? "Update Sub Task Failed" : "Add Sub Task Failed"}`, description: res.data.message })
-  //     }
-  //   }
-  //   catch (err) {
-  //     console.log(err);
-  //     setLoading(false)
-  //     return toast({ title: "Error", description: err.response.data.message, variant: "destructive" })
-  //   }
-  //   finally {
-  //     setLoading(false)
-  //   }
-  // };
-
-
-
-  const handleSave = async (e?: React.FormEvent, forceCreate: boolean = false) => {
-    e?.preventDefault();
     const obj = {
+      taskId: selectedTask._id,
+      department: selectedTask.managerId?.department,
+      companyId: user?.companyId?._id || user?.createdBy?._id,
+      adminId: user._id
+    };
+
+    try {
+      const res = await getEmployeebyDepartment(obj);
+      if (res.status === 200) {
+        setEmployeeList(res.data.data || []);
+        setTaskForm(prev => ({ ...prev, taskId: selectedTaskId, employee: "" }));
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.response?.data?.message, variant: "destructive" });
+    }
+  };
+
+  const handleSave = async (e?: React.FormEvent, forceCreate = false) => {
+    e?.preventDefault();
+
+    const payload = {
       _id: initialData?._id,
       companyId: user?.companyId?._id || user?.createdBy?._id,
       taskId: taskForm?.taskId,
@@ -185,41 +662,38 @@ const handleParentTaskChange = async (taskId) => {
       priority: taskForm?.priority,
       forceCreate,
     };
+
     setLoading(true);
 
     try {
-      let res = null;
-      if (isEdit) {
-        res = await updateSubTask(obj);
-      } else {
-        res = await addSubTask(obj);
-      }
+      const res = isEdit
+        ? await updateSubTask(payload)
+        : await addSubTask(payload);
 
       if (res.data?.warning) {
-      setPendingPayload(obj);
-      setConfirmOpen(true);
-      return;
-    }
+        setPendingPayload(payload);
+        setConfirmOpen(true);
+        return;
+      }
 
       if (res.status === 200 || res.status === 201) {
-        // ✅ Success
-        onClose();
         setSubTaskListRefresh(true);
         toast({
           title: isEdit ? "Update Sub Task Successfully" : "Add Sub Task Successfully",
           description: res.data.message,
         });
-      }  else {
+        onClose();
+      } else {
         toast({
-          title: isEdit ? "Update Sub Task Failed" : "Add Sub Task Failed",
+          title: isEdit ? "Update Failed" : "Add Failed",
           description: res.data.message,
+          variant: "destructive",
         });
       }
     } catch (err: any) {
-      console.error(err);
       toast({
         title: "Error",
-        description: err.response?.data?.message || err.message,
+        description: err.response?.data?.message || "Failed to save",
         variant: "destructive",
       });
     } finally {
@@ -227,197 +701,293 @@ const handleParentTaskChange = async (taskId) => {
     }
   };
 
-
   const handleGetTask = async () => {
-    if (!user?._id || (!user?.companyId?._id && !user?.createdBy?._id)) { return }
-    let obj = { companyId: user?.companyId?._id || user?.createdBy?._id, adminId: user?._id }
+    if (!user?._id || (!user?.companyId?._id && !user?.createdBy?._id)) return;
+    const obj = { companyId: user?.companyId?._id || user?.createdBy?._id, adminId: user._id };
     try {
       const res = await getTask(obj);
-      console.log(res)
       if (res.status === 200) {
-        setTaskList(Array.isArray(res?.data?.data) ? res?.data?.data : Object.values(res?.data?.data));
+        const data = res?.data?.data;
+        setTaskList(Array.isArray(data) ? data : Object.values(data || {}));
       }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.response?.data?.message, variant: "destructive" });
     }
-    catch (err) {
-      console.log(err);
-      return toast({ title: "Error", description: err.response.data.message, variant: "destructive" })
-    }
-  }
+  };
 
- useEffect(() => {
-  if (!isOpen) return;
-  if (!taskList.length) handleGetTask();
-}, [isOpen]);
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!taskList.length || taskListRefresh) {
+      handleGetTask();
+    }
+  }, [isOpen, taskListRefresh]);
 
   return (
     <>
-    
-      {/* ⚠️ AlertDialog for existing active subtasks */}
-     <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>
-            Employee already has active tasks
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            Do you still want to assign this task?
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-    
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={() => {
-              setConfirmOpen(false);
-              handleSave(undefined, true); // 🔥 forceCreate
-            }}
-          >
-            Continue
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      <TaskForm
+        projectId={null}
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        initialData={null}
+        setTaskListRefresh={setTaskListRefresh}
+      />
 
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[650px] max-h-[80vh] sm:max-h-[90vh] overflow-y-auto w-[95vw] pb-6">
-        <form onSubmit={handleSave}>
-          <DialogHeader>
-            <DialogTitle>{isEdit ? "Edit Sub-Task" : "Create New Sub-Task"}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            {/* Row: Project & Task Name */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="project">Parent Task</Label>
-                <Select
-                  value={taskForm?.taskId?.toString() || ""}
-                  onValueChange={handleParentTaskChange}>
-                  <SelectTrigger id="project">
-                    <SelectValue placeholder="Select Parent Task" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {taskList.map((p) => (
-                      <SelectItem key={p._id} value={p._id} className="cursor-pointer"> {p.name} </SelectItem>))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="taskName">Sub Task Name</Label>
-                <Input
-                  id="taskName"
-                  placeholder="Enter task name"
-                  value={taskForm?.name || ""}
-                  onChange={(e) => setTaskForm({ ...taskForm, name: e.target.value })  } />
-              </div>
-            </div>
-            {/* Description */}
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Enter task description"
-                rows={3}
-                value={taskForm?.description || ""}
-                onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value }) }/>
-            </div>
-            {/* Row: Start Date & End Date */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="startDate">Start Date</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={taskForm?.startDate || ""}
-                  min={ isEdit ? startDateTouched ? today : taskForm?.startDate || today   : today }
-                  onChange={(e) => { setStartDateTouched(true);
-                    setTaskForm({ ...taskForm, startDate: e.target.value,
-                      // agar start date change hui aur end date usse chhoti hai to reset
-                      endDate: taskForm.endDate && e.target.value && taskForm.endDate < e.target.value ? "" : taskForm.endDate }) } } />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="endDate">End Date</Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={taskForm?.endDate || ""}
-                  min={taskForm?.startDate || today}
-                  disabled={!taskForm?.startDate} // start date ke bina end date disabled
-                  onChange={(e) => setTaskForm({ ...taskForm, endDate: e.target.value }) } />
-                {!taskForm?.startDate && (
-                  <p className="text-xs text-muted-foreground">
-                    Please select start date first
-                  </p>
-                )}
-              </div>
-            </div>
-            {/* Row: Manager & Priority */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="grid gap-1">
-                <Label htmlFor="manager">Employee</Label>
-                <Select
-                  disabled={!taskForm?.taskId}
-                  value={taskForm?.employee|| ""}
-                  onValueChange={(value) => setTaskForm({ ...taskForm, employee: value }) }>
-                  <SelectTrigger id="manager">
-                    <SelectValue placeholder="Select Employee" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {employeeList.map(emp => (
-                      <SelectItem key={emp._id} value={emp._id} className="cursor-pointer" disabled={emp?.taskRole === "manager"}>
-                        {emp.fullName} ({emp.department}) {emp.taskRole === "manager" ? "Manager" : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {!taskForm?.taskId && (
-                  <p className="text-xs text-muted-foreground">
-                    Please select parent task first
-                  </p>
-                )}
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="priority">Priority</Label>
-                <Select
-                  value={taskForm?.priority || "low"}
-                  onValueChange={(value) => setTaskForm({ ...taskForm, priority: value as Priority }) } >
-                  <SelectTrigger id="priority">
-                    <SelectValue placeholder="Select Priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low" className="cursor-pointer">Low</SelectItem>
-                    <SelectItem value="medium" className="cursor-pointer">Medium</SelectItem>
-                    <SelectItem value="high" className="cursor-pointer">High</SelectItem>
-                    <SelectItem value="urgent" className="cursor-pointer">Urgent</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            {/* Remarks */}
-            <div className="grid gap-2">
-              <Label htmlFor="remarks">Remarks</Label>
-              <Textarea
-                id="remarks"
-                placeholder="Additional comments or remarks"
-                rows={2}
-                value={taskForm?.remarks || ""}
-                onChange={(e) => setTaskForm({ ...taskForm, remarks: e.target.value }) }/>
-            </div>
-          </div>
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Employee already has active tasks</AlertDialogTitle>
+            <AlertDialogDescription>
+              Do you still want to assign this sub-task?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmOpen(false);
+                handleSave(undefined, true);
+              }}
+            >
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-          <DialogFooter className="flex-col-reverse sm:flex-row gap-2 sticky bottom-0 bg-white pt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={loading} className="w-full sm:w-auto">
-              Cancel
-            </Button>
-            <Button
-              disabled={loading || !taskForm?.name || !taskForm?.description || !taskForm?.startDate || !taskForm?.endDate || !taskForm?.employee || !taskForm?.priority || !taskForm?.remarks}
-              className="w-full sm:w-auto" >
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isEdit ? "Update Sub-Task" : "Create Sub-Task"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[580px] w-[92vw] max-h-[94vh] p-0 gap-0 rounded-lg overflow-hidden">
+          <form onSubmit={handleSave} className="flex flex-col h-full">
+            <DialogHeader className="px-5 pt-2 pb-1 border-b shrink-0">
+              <DialogTitle className="text-lg font-semibold">
+                {isEdit ? "Edit Sub-Task" : "Create New Sub-Task"}
+              </DialogTitle>
+            </DialogHeader>
+
+            <div
+              ref={scrollRef}
+              className="flex-1 overflow-y-auto px-5 py-1 space-y-4 text-sm"
+            >
+              {/* Parent Task & Sub-Task Name */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="parentTask" className="text-sm font-medium">Parent Task</Label>
+                  <Select
+                    value={taskForm?.taskId?.toString() || ""}
+                    onValueChange={handleParentTaskChange}
+                    disabled={taskList.length === 0}
+                  >
+                    <SelectTrigger id="parentTask" className="h-9 text-sm">
+                      <SelectValue placeholder="Select Parent Task" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-52">
+                      {taskList.map((t) => (
+                        <SelectItem key={t._id} value={t._id}>
+                          {t.name}
+                        </SelectItem>
+                      ))}
+                      <div className="border-t my-1" />
+                      <button
+                        type="button"
+                        onClick={() => setIsFormOpen(true)}
+                        className="w-full text-left px-2 py-1.5 text-sm text-primary hover:bg-muted rounded-sm"
+                      >
+                        + Add New Parent Task
+                      </button>
+                    </SelectContent>
+                  </Select>
+
+                  {taskList.length === 0 && (
+                    <div className="flex items-center justify-between text-xs text-red-500 mt-1">
+                      <span>Please add a parent task first</span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setIsFormOpen(true)}
+                        className="h-7 px-3 text-xs"
+                      >
+                        + Add Task
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid gap-1.5">
+                  <Label htmlFor="taskName" className="text-sm font-medium">Sub Task Name</Label>
+                  <Input
+                    id="taskName"
+                    placeholder="Enter sub-task name"
+                    value={taskForm?.name || ""}
+                    onChange={(e) => setTaskForm({ ...taskForm, name: e.target.value })}
+                    className="h-9 text-sm"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="grid gap-1.5">
+                <Label htmlFor="description" className="text-sm font-medium md:mt[-15px]">Description</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Briefly describe the sub-task (Optional)"
+                  value={taskForm?.description || ""}
+                  onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
+                  className="min-h-[72px] text-sm resize-y"
+                />
+              </div>
+
+              {/* Dates */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="startDate" className="text-sm font-medium">Start Date</Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    min={isEdit && !startDateTouched ? undefined : today}
+                    value={taskForm?.startDate || ""}
+                    onChange={(e) => {
+                      setStartDateTouched(true);
+                      setTaskForm(prev => ({
+                        ...prev,
+                        startDate: e.target.value,
+                        endDate:
+                          prev.endDate && e.target.value && prev.endDate < e.target.value
+                            ? ""
+                            : prev.endDate
+                      }));
+                    }}
+                    className="h-9 text-sm"
+                    required
+                  />
+                </div>
+
+                <div className="grid gap-1.5">
+                  <Label htmlFor="endDate" className="text-sm font-medium">End Date</Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    min={taskForm?.startDate || today}
+                    disabled={!taskForm?.startDate}
+                    value={taskForm?.endDate || ""}
+                    onChange={(e) => setTaskForm({ ...taskForm, endDate: e.target.value })}
+                    required
+                    className="h-9 text-sm"
+                  />
+                  {!taskForm?.startDate && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Select start date first
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Employee & Priority */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid gap-1.5">
+                  <Label htmlFor="employee" className="text-sm font-medium">Employee</Label>
+                  <Select
+                    disabled={!taskForm?.taskId}
+                    value={taskForm?.employee || ""}
+                    onValueChange={(value) => setTaskForm({ ...taskForm, employee: value })}
+                    required
+                  >
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue placeholder="Select Employee" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {employeeList.map((emp) => (
+                        <SelectItem
+                          key={emp._id}
+                          value={emp._id}
+                          disabled={emp?.taskRole === "manager"}
+                        >
+                          {emp.fullName} ({emp.department})
+                          {emp.taskRole === "manager" ? " • Manager" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {!taskForm?.taskId && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Select parent task first
+                    </p>
+                  )}
+                </div>
+
+                <div className="grid gap-1.5">
+                  <Label htmlFor="priority" className="text-sm font-medium">Priority</Label>
+                  <Select
+                    value={taskForm?.priority || ""}
+                    onValueChange={(value) => setTaskForm({ ...taskForm, priority: value as Priority })}
+                  >
+                    <SelectTrigger className="h-9 text-sm">
+                      <SelectValue placeholder="Select Priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="urgent">Urgent</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Remarks */}
+              <div className="grid gap-1.5">
+                <Label htmlFor="remarks" className="text-sm font-medium">Remarks</Label>
+                <Textarea
+                  id="remarks"
+                  placeholder="Add any additional notes or remarks (Optional)"
+                  value={taskForm?.remarks || ""}
+                  onChange={(e) => setTaskForm({ ...taskForm, remarks: e.target.value })}
+                  className="min-h-[70px] text-sm resize-y"
+                />
+              </div>
+            </div>
+
+            {/* Footer + scroll indicator */}
+            <div className="relative shrink-0 border-t bg-background">
+              <DialogFooter className="px-5 py-4 gap-3 flex-col-reverse sm:flex-row">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onClose}
+                  disabled={loading}
+                  className="h-9 text-sm w-full sm:w-auto"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={
+                    loading ||
+                    !taskForm?.name ||
+                    !taskForm?.startDate ||
+                    !taskForm?.endDate ||
+                    !taskForm?.employee ||
+                    !taskForm?.priority ||
+                    !taskForm?.taskId
+                  }
+                  className="h-9 text-sm w-full sm:w-auto"
+                >
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isEdit ? "Update Sub-Task" : "Create Sub-Task"}
+                </Button>
+              </DialogFooter>
+
+              {showScrollArrow && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 pointer-events-none">
+                  <div className="flex flex-col items-center text-muted-foreground animate-bounce">
+                    <ChevronDown className="h-6 w-6 opacity-70" />
+                    <span className="text-xs opacity-60 mt-0.5">scroll for more</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

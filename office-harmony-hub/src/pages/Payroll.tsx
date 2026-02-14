@@ -86,7 +86,6 @@ const Payroll: React.FC = () => {
   const handleGetSinglePayRoll = async () => {
     try {
       const data = await getSinglePayRoll(user?._id, user?.createdBy?._id);
-      console.log("Single Payroll:", data);
       if (Array.isArray(data)) {
         setSinglePayrolls(data);
       }
@@ -104,6 +103,7 @@ const Payroll: React.FC = () => {
       handleGetSinglePayRoll();
     }
   }, [user, salarySlipRefresh]);
+  console.log(filteredPayrolls)
   return (
     <>
     <Helmet>
@@ -111,14 +111,14 @@ const Payroll: React.FC = () => {
         <meta name="description" content="This is the home page of our app" />
       </Helmet>
 
-       <div className="mb-4">
-                    <button
-                      onClick={() => window.history.back()}
-                      className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-                    >
-                      <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-                    </button>
-                  </div>
+     <div className="md:mt-[-20px] md:mb-[5px]">
+       <button
+         onClick={() => window.history.back()}
+         className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+       >
+         <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
+       </button>
+     </div>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -351,7 +351,7 @@ const Payroll: React.FC = () => {
                           <TableCell className="font-medium">
                             {employee.employeeId.fullName}
                           </TableCell>
-                          <TableCell>{employee.departmentId.name}</TableCell>
+                          <TableCell>{employee?.departmentId?.name}</TableCell>
                           <TableCell className="text-right">
                             ₹{employee.basic.toLocaleString()}
                           </TableCell>

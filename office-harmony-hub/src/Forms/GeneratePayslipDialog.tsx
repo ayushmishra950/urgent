@@ -111,6 +111,7 @@ export default function GeneratePayslipDialog({
       toast({
         title: "Error",
         description: err?.response?.data?.message || "Something went wrong",
+        variant:"destructive"
       });
     }
   };

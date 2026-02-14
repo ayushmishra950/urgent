@@ -113,7 +113,7 @@ setCategoryListRefersh,
             <Label htmlFor="category-desc">Description (optional)</Label>
             <Input
               id="category-desc"
-              placeholder="Short description of this category"
+              placeholder="Short description of this category(Optional)"
               value={category?.description}
               onChange={(e) =>
                 setCategory({ ...category, description: e.target.value })
@@ -132,7 +132,7 @@ setCategoryListRefersh,
           </Button>
           <Button
             // onClick={handleSave}
-            disabled={isLoading || !category?.name || !category?.description}
+            disabled={isLoading || !category?.name }
           >
             {isLoading
               ? mode === false

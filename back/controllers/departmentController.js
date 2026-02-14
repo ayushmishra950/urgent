@@ -1,5 +1,6 @@
 const Department = require("../models/departmentModel.js");
 const { Admin } = require("../models/authModel.js");
+const { Employee } = require("../models/employeeModel.js"); // adjust path if needed
 
 // ---------------- Add Department ----------------
 const addDepartment = async (req, res) => {
@@ -16,8 +17,8 @@ const addDepartment = async (req, res) => {
       return res.status(404).json({ message: "No admin found for this company" });
     }
 
-    if (!name || !description) {
-      return res.status(400).json({ message: "Department name and description are required" });
+    if (!name) {
+      return res.status(400).json({ message: "Department name  are required" });
     }
 
     // Check if department already exists for this company
@@ -106,6 +107,34 @@ const updateDepartment = async (req, res) => {
   }
 };
 
+
+
+
+
+// ---------------- Update Employee By Department ----------------
+const updateEmployeeByDepartment = async (req, res) => {
+  try {
+    const { companyId, adminId, employeeId, departmentName } = req.body;
+    if(!companyId || !adminId || !employeeId || !departmentName) return res.status(400).json({message:"required field missing."})
+
+    const admin = await Admin.findOne({ _id: adminId, companyId });
+    if (!admin) return res.status(403).json({ message: "You are not Authorized." });
+
+    const employee = await Employee.findOne({ _id: employeeId, createdBy: companyId });
+    if (!employee) return res.status(404).json({ message: "Employee Not Found." });
+
+    employee.department = departmentName;
+
+    employee.save();
+
+    res.status(200).json({data:employee, message: "Employee’s department has been successfully updated." });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // ---------------- Delete Department ----------------
 const deleteDepartment = async (req, res) => {
   try {
@@ -134,4 +163,5 @@ module.exports = {
   getDepartmentById,
   updateDepartment,
   deleteDepartment,
+  updateEmployeeByDepartment
 };

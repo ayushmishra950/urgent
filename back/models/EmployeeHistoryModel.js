@@ -51,7 +51,7 @@ const employeeHistorySchema = new mongoose.Schema(
     // Who made the change (admin / HR)
     changedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // ya Admin
+      ref: "Company", // ya Admin
       default: null,
     },
   },

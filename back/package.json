@@ -1,4 +1,16 @@
 {
+  "name": "attendance-backend",
+  "version": "1.0.0",
+  "description": "Node.js backend for attendance system",
+  "main": "src/back/app.js",
+"scripts": {
+  "start": "node src/back/app.js",
+  "dev": "nodemon src/back/app.js"
+},
+
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",

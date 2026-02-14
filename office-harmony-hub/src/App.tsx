@@ -27,6 +27,14 @@ import Project from "./task/Project";
 import OverdueTask from "./task/OverDue-Task";
 import TaskManager from "./task/TaskManager";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import JobDashboard from "./job-portal/Job-Dashboard";
+import JobLayout from "./job-portal/JobLayout";
+import ApplicationsPage from "@/job-portal/ApplicationsPage";
+import CandidatesPage from "./job-portal/CandidatesPage";
+import CompaniesPage from "./job-portal/CompaniesPage";
+import JobsPage from "./job-portal/JobsPage";
+import RevenuePage from "./job-portal/RevenuePage";
+import SettingsPage from "./job-portal/SettingsPage";
 
 // global.d.ts
 export {};
@@ -81,7 +89,23 @@ const AppRoutes = () => {
           <Route path="overdue" element={<OverdueTask />} />
           <Route path="manager" element={<TaskManager />} />
         </Route>
+
+
+         {/* Job Portal Routes */}
+        <Route path="/jobs" element={<JobLayout />}>
+          <Route index element={<JobDashboard />} />
+          <Route path="application" element={<ApplicationsPage />} />
+          <Route path="candidate" element={<CandidatesPage />} />
+          <Route path="company" element={<CompaniesPage />} />
+          <Route path="job" element={<JobsPage />} />
+          <Route path="revenue" element={<RevenuePage />} />
+          <Route path="setting" element={<SettingsPage />} />
+        </Route>
+      
       </Route>
+
+
+      
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -4,6 +4,8 @@ const { EmployeeHistory } = require("../models/EmployeeHistoryModel.js");
 const { Admin } = require("../models/authModel.js");
 const bcrypt = require("bcryptjs");
 const recentActivity = require("../models/recentActivityModel.js");
+const Task = require("../models/taskModel");
+const SubTask = require("../models/SubtaskModel");
 
 // ---------------- Add Employee Controller ----------------
 
@@ -20,7 +22,6 @@ const addEmployee = async (req, res) => {
       monthSalary,
       joinDate,
       employeeType,
-      position,
       roleResponsibility,
       lpa,
       remarks,
@@ -55,9 +56,7 @@ const addEmployee = async (req, res) => {
     // Upload helper
     const upload = async (file) =>
       file ? await uploadToCloudinary(file.buffer) : "";
-
-    // Determine status
-    const status = new Date(joinDate) <= new Date() ? "ACTIVE" : "ON_HOLD";
+  
 
     // Create employee
     const employee = new Employee({
@@ -67,10 +66,8 @@ const addEmployee = async (req, res) => {
       contact,
       department,
       designation,
-      position: position || "",
       roleResponsibility: roleResponsibility || "",
       employeeType: employeeType || "permanent",
-      status,
       joinDate,
       monthSalary: Number(monthSalary || 0),
       lpa: Number(lpa || 0),
@@ -141,6 +138,7 @@ const getEmployeeById = async (req, res) => {
   try {
     const { id } = req.params;
     const { companyId } = req.query;
+    let task = null;
 
     if (!companyId) {
       return res.status(400).json({ message: "Company ID is required" });
@@ -151,9 +149,22 @@ const getEmployeeById = async (req, res) => {
       return res.status(404).json({ message: "Employee not found or access denied" });
     }
 
-    const history = await EmployeeHistory.find({ employeeId: id }).sort({ effectiveDate: -1 });
+    if(employee?.taskRole === "manager"){
+     task = await Task.find({companyId, managerId: employee?._id})
+    }
+    else{
+      task = await SubTask.find({companyId, employeeId: employee?._id});
+    }
 
-    return res.status(200).json({ employee, history });
+    const history = await EmployeeHistory.find({ employeeId: id })
+    .populate({
+      path:"changedBy",populate : {
+          path : "admins", select : "username"
+      }
+    })
+    .sort({ effectiveDate: -1 });
+
+    return res.status(200).json({ employee, history, task });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Server error" });

@@ -1,248 +1,577 @@
-import React, { useEffect, useState } from 'react';
+// import React, { useEffect, useState } from 'react';
+// import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+// import { Input } from "@/components/ui/input";
+// import { Label } from "@/components/ui/label";
+// import { Button } from "@/components/ui/button";
+// import { Textarea } from "@/components/ui/textarea";
+// import {
+//     Select,
+//     SelectContent,
+//     SelectItem,
+//     SelectTrigger,
+//     SelectValue,
+// } from "@/components/ui/select";
+// import { Loader2 } from "lucide-react";
+// import { addProject, updateProject } from "@/services/Service";
+// import { useAuth } from '@/contexts/AuthContext';
+// import { useToast } from '@/hooks/use-toast';
+
+// type Priority = 'low' | 'medium' | 'high' | 'urgent';
+
+// interface ProjectFormData {
+//     _id?: string;
+//     name?: string;
+//     description?: string;
+//     startDate?: string;
+//     endDate?: string;
+//     priority?: Priority;
+//     remarks?: string;
+//     status?: string;
+// }
+
+// interface ProjectFormProps {
+//     isOpen: boolean;
+//     onClose: () => void;
+//     initialData?: ProjectFormData | null;
+//     setProjectListRefresh: (value: boolean) => void;
+// }
+
+// // Helper function to convert ISO string to YYYY-MM-DD
+// const formatForInput = (isoString) => {
+//     if (!isoString) return "";
+//     const date = new Date(isoString);
+//     const year = date.getFullYear();
+//     const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+//     const day = String(date.getDate()).padStart(2, "0");
+//     return `${year}-${month}-${day}`;
+// };
+
+// const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, initialData = null, setProjectListRefresh }) => {
+//     const { user } = useAuth();
+//     const { toast } = useToast();
+//     const [formData, setFormData] = useState<ProjectFormData>({
+//         priority: 'medium',
+//         startDate: '',
+//         endDate: ''
+//     });
+//     const [loading, setLoading] = useState(false);
+//     const [startDateTouched, setStartDateTouched] = useState(false);
+//     const isEdit = Boolean(initialData);
+//     const today = new Date().toISOString().split("T")[0];
+
+//     useEffect(() => {
+//         setStartDateTouched(false);
+//     }, [isOpen]);
+
+//     useEffect(() => {
+//         if (initialData) {
+//             setFormData({
+//                 ...initialData,
+//                 startDate: formatForInput(initialData.startDate),
+//                 endDate: formatForInput(initialData.endDate)
+//             });
+//         } else {
+//             setFormData({ priority: 'medium', startDate: '', endDate: '' });
+//         }
+//     }, [initialData, isOpen]);
+
+
+//     const handleSave = async (e?: React.FormEvent) => {
+//         e?.preventDefault();
+//         const requiredFields = ['name', 'description', 'startDate', 'endDate', 'priority', 'remarks'] as const;
+//         for (let field of requiredFields) {
+//             if (!formData[field]) {
+//                 toast({
+//                     title: "Missing Field",
+//                     description: `${field.charAt(0).toUpperCase() + field.slice(1)} is required.`,
+//                     variant: "destructive",
+//                 });
+//                 return; // Stop function if any field is missing
+//             }
+//         };
+//         setLoading(true);
+//         try {
+//             let res = null;
+//             if (isEdit === true) { res = await updateProject(user?._id, user?.companyId?._id, formData); }
+//             else { res = await addProject(user?._id, user?.companyId?._id, formData); }
+
+//             if (res.status === 200 || res.status === 201) { toast({ title: `${isEdit ? "Update Project." : "Add Project."}`, description: res.data.message }); setProjectListRefresh(true) }
+//             else { toast({ title: `${isEdit ? "Update Project." : "Add Project."}`, description: res.data.message }); setLoading(false); }
+//         }
+//         catch (err) {
+//             console.log(err); toast({ title: `Error`, description: err.response.data.message }); setLoading(false);
+//         }
+//         finally {
+//             setLoading(false);
+//             setFormData({ priority: 'medium' });
+//             onClose();
+//         }
+//     };
+
+//     return (
+//         <Dialog open={isOpen} onOpenChange={onClose}>
+//             <DialogContent className="sm:max-w-[600px] max-h-[80vh] sm:max-h-[90vh] overflow-y-auto w-[95vw] pb-6">
+//                 <form onSubmit={handleSave}>
+//                     <DialogHeader>
+//                         <DialogTitle>{initialData ? 'Edit Project' : 'Create New Project'}</DialogTitle>
+//                     </DialogHeader>
+//                     <div className="grid gap-4 py-4">
+//                         {/* Project Name */}
+//                         <div className="grid gap-2">
+//                             <Label htmlFor="projectName">Project Name</Label>
+//                             <Input
+//                                 id="projectName"
+//                                 placeholder="Enter project name"
+//                                 value={formData.name || ''}
+//                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
+//                             />
+//                         </div>
+
+//                         {/* Description */}
+//                         <div className="grid gap-2">
+//                             <Label htmlFor="projectDescription">Description</Label>
+//                             <Textarea
+//                                 id="projectDescription"
+//                                 placeholder="Enter project description"
+//                                 value={formData.description || ''}
+//                                 onChange={e => setFormData({ ...formData, description: e.target.value })}
+//                             />
+//                         </div>
+
+//                         {/* Dates */}
+//                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+//                             {/* Start Date */}
+//                             <div className="grid gap-2">
+//                                 <Label htmlFor="projectStartDate">Start Date</Label>
+//                                 <Input
+//                                     id="projectStartDate"
+//                                     type="date"
+//                                     min={
+//                                         isEdit
+//                                             ? startDateTouched
+//                                                 ? today       // edit + changed → today/future only
+//                                                 : formData?.startDate || today  // edit + untouched → old date allowed
+//                                             : today         // create → today/future only
+//                                     }
+//                                     value={formData.startDate || ''}
+//                                     onChange={(e) => {
+//                                         setStartDateTouched(true);
+//                                         setFormData((prev) => ({
+//                                             ...prev,
+//                                             startDate: e.target.value,
+//                                             // agar endDate startDate se chhoti ho to reset
+//                                             endDate:
+//                                                 prev.endDate && e.target.value && prev.endDate < e.target.value
+//                                                     ? ''
+//                                                     : prev.endDate,
+//                                         }))
+//                                     }
+//                                     }
+//                                 />
+//                             </div>
+
+//                             {/* End Date */}
+//                             <div className="grid gap-2">
+//                                 <Label htmlFor="projectEndDate">End Date</Label>
+//                                 <Input
+//                                     id="projectEndDate"
+//                                     type="date"
+//                                     value={formData.endDate || ''}
+//                                     min={formData.startDate || today}
+//                                     disabled={!formData.startDate}
+//                                     onChange={(e) =>
+//                                         setFormData((prev) => ({
+//                                             ...prev,
+//                                             endDate: e.target.value,
+//                                         }))
+//                                     }
+//                                 />
+
+//                                 {!formData.startDate && (
+//                                     <p className="text-xs text-muted-foreground">
+//                                         Please select start date first
+//                                     </p>
+//                                 )}
+//                             </div>
+//                         </div>
+
+
+//                         {/* Priority */}
+//                         <div className="grid gap-2">
+//                             <Label htmlFor="projectPriority">Priority</Label>
+//                             <Select
+//                                 value={formData.priority || 'medium'}
+//                                 onValueChange={(value: Priority) => setFormData({ ...formData, priority: value })}
+//                             >
+//                                 <SelectTrigger id="projectPriority">
+//                                     <SelectValue placeholder="Select priority" />
+//                                 </SelectTrigger>
+//                                 <SelectContent>
+//                                     <SelectItem value="low" className='cursor-pointer'>Low</SelectItem>
+//                                     <SelectItem value="medium" className='cursor-pointer'>Medium</SelectItem>
+//                                     <SelectItem value="high" className='cursor-pointer'>High</SelectItem>
+//                                     <SelectItem value="urgent" className='cursor-pointer'>Urgent</SelectItem>
+//                                 </SelectContent>
+//                             </Select>
+//                         </div>
+
+//                         {/* Remarks */}
+//                         <div className="grid gap-2">
+//                             <Label htmlFor="projectRemarks">Remarks</Label>
+//                             <Textarea
+//                                 id="projectRemarks"
+//                                 placeholder="Additional comments or remarks"
+//                                 value={formData.remarks || ''}
+//                                 onChange={e => setFormData({ ...formData, remarks: e.target.value })}
+//                             />
+//                         </div>
+//                     </div>
+
+//                     <DialogFooter className="flex-col-reverse sm:flex-row gap-2 sticky bottom-0 bg-white pt-4">
+//                         <Button type="button" variant="outline" onClick={onClose} disabled={loading} className="w-full sm:w-auto">
+//                             Cancel
+//                         </Button>
+//                         <Button
+//                             // onClick={handleSave}
+//                             disabled={loading || !formData.name || !formData.priority || !formData.startDate || !formData.endDate || !formData.description || !formData.remarks}
+//                             className="w-full sm:w-auto">
+//                             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+//                             {isEdit ? 'Update Project' : 'Create Project'}
+//                         </Button>
+//                     </DialogFooter>
+//                 </form>
+//             </DialogContent>
+//         </Dialog>
+//     );
+// };
+
+// export default ProjectForm;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import React, { useEffect, useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import { Loader2, ChevronDown } from "lucide-react";
 import { addProject, updateProject } from "@/services/Service";
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import {ProjectFormData,ProjectFormProps, Priority } from "@/types/index";
+import {formatDateFromInput} from "@/services/allFunctions"
 
-type Priority = 'low' | 'medium' | 'high' | 'urgent';
+const ProjectForm: React.FC<ProjectFormProps> = ({
+  isOpen,
+  onClose,
+  initialData = null,
+  setProjectListRefresh,
+}) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [formData, setFormData] = useState<ProjectFormData>({
+    priority: 'medium',
+    startDate: '',
+    endDate: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [startDateTouched, setStartDateTouched] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showScrollArrow, setShowScrollArrow] = useState(false);
 
-interface ProjectFormData {
-    _id?: string;
-    name?: string;
-    description?: string;
-    startDate?: string;
-    endDate?: string;
-    priority?: Priority;
-    remarks?: string;
-    status?: string;
-}
+  const isEdit = Boolean(initialData);
+  const today = new Date().toISOString().split('T')[0];
 
-interface ProjectFormProps {
-    isOpen: boolean;
-    onClose: () => void;
-    initialData?: ProjectFormData | null;
-    setProjectListRefresh: (value: boolean) => void;
-}
+  useEffect(() => {
+    setStartDateTouched(false);
+  }, [isOpen]);
 
-// Helper function to convert ISO string to YYYY-MM-DD
-const formatForInput = (isoString) => {
-    if (!isoString) return "";
-    const date = new Date(isoString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-};
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        ...initialData,
+        startDate: formatDateFromInput(initialData.startDate),
+        endDate: formatDateFromInput(initialData.endDate),
+      });
+    } else {
+      setFormData({ priority: 'medium', startDate: '', endDate: '' });
+    }
+  }, [initialData, isOpen]);
 
-const ProjectForm: React.FC<ProjectFormProps> = ({ isOpen, onClose, initialData = null, setProjectListRefresh }) => {
-    const { user } = useAuth();
-    const { toast } = useToast();
-    const [formData, setFormData] = useState<ProjectFormData>({
-        priority: 'medium',
-        startDate: '',
-        endDate: ''
-    });
-    const [loading, setLoading] = useState(false);
-    const [startDateTouched, setStartDateTouched] = useState(false);
-    const isEdit = Boolean(initialData);
-    const today = new Date().toISOString().split("T")[0];
+  // Detect if scrolling is needed
+  const checkIfScrollable = () => {
+    if (!scrollRef.current) return;
+    const { scrollHeight, clientHeight } = scrollRef.current;
+    setShowScrollArrow(scrollHeight > clientHeight + 4); // small threshold
+  };
 
-    useEffect(() => {
-        setStartDateTouched(false);
-    }, [isOpen]);
+  useEffect(() => {
+    if (!isOpen) return;
+    checkIfScrollable();
 
-    useEffect(() => {
-        if (initialData) {
-            setFormData({
-                ...initialData,
-                startDate: formatForInput(initialData.startDate),
-                endDate: formatForInput(initialData.endDate)
-            });
-        } else {
-            setFormData({ priority: 'medium', startDate: '', endDate: '' });
-        }
-    }, [initialData, isOpen]);
+    const resizeObserver = new ResizeObserver(checkIfScrollable);
+    if (scrollRef.current) {
+      resizeObserver.observe(scrollRef.current);
+    }
 
+    // Also check after content might change
+    const timer = setTimeout(checkIfScrollable, 300);
 
-    const handleSave = async (e?: React.FormEvent) => {
-        e?.preventDefault();
-        const requiredFields = ['name', 'description', 'startDate', 'endDate', 'priority', 'remarks'] as const;
-        for (let field of requiredFields) {
-            if (!formData[field]) {
-                toast({
-                    title: "Missing Field",
-                    description: `${field.charAt(0).toUpperCase() + field.slice(1)} is required.`,
-                    variant: "destructive",
-                });
-                return; // Stop function if any field is missing
-            }
-        };
-        setLoading(true);
-        try {
-            let res = null;
-            if (isEdit === true) { res = await updateProject(user?._id, user?.companyId?._id, formData); }
-            else { res = await addProject(user?._id, user?.companyId?._id, formData); }
-
-            if (res.status === 200 || res.status === 201) { toast({ title: `${isEdit ? "Update Project." : "Add Project."}`, description: res.data.message }); setProjectListRefresh(true) }
-            else { toast({ title: `${isEdit ? "Update Project." : "Add Project."}`, description: res.data.message }); setLoading(false); }
-        }
-        catch (err) {
-            console.log(err); toast({ title: `Error`, description: err.response.data.message }); setLoading(false);
-        }
-        finally {
-            setLoading(false);
-            setFormData({ priority: 'medium' });
-            onClose();
-        }
+    return () => {
+      resizeObserver.disconnect();
+      clearTimeout(timer);
     };
+  }, [isOpen, formData]);
 
-    return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[600px] max-h-[80vh] sm:max-h-[90vh] overflow-y-auto w-[95vw] pb-6">
-                <form onSubmit={handleSave}>
-                    <DialogHeader>
-                        <DialogTitle>{initialData ? 'Edit Project' : 'Create New Project'}</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        {/* Project Name */}
-                        <div className="grid gap-2">
-                            <Label htmlFor="projectName">Project Name</Label>
-                            <Input
-                                id="projectName"
-                                placeholder="Enter project name"
-                                value={formData.name || ''}
-                                onChange={e => setFormData({ ...formData, name: e.target.value })}
-                            />
-                        </div>
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-                        {/* Description */}
-                        <div className="grid gap-2">
-                            <Label htmlFor="projectDescription">Description</Label>
-                            <Textarea
-                                id="projectDescription"
-                                placeholder="Enter project description"
-                                value={formData.description || ''}
-                                onChange={e => setFormData({ ...formData, description: e.target.value })}
-                            />
-                        </div>
+    const required = ['name', 'startDate', 'endDate', 'priority'] as const;
+    for (const field of required) {
+      if (!formData[field]) {
+        toast({
+          title: "Required Field Missing",
+          description: `${field.charAt(0).toUpperCase() + field.slice(1)} is required.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
 
-                        {/* Dates */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* Start Date */}
-                            <div className="grid gap-2">
-                                <Label htmlFor="projectStartDate">Start Date</Label>
-                                <Input
-                                    id="projectStartDate"
-                                    type="date"
-                                    min={
-                                        isEdit
-                                            ? startDateTouched
-                                                ? today       // edit + changed → today/future only
-                                                : formData?.startDate || today  // edit + untouched → old date allowed
-                                            : today         // create → today/future only
-                                    }
-                                    value={formData.startDate || ''}
-                                    onChange={(e) => {
-                                        setStartDateTouched(true);
-                                        setFormData((prev) => ({
-                                            ...prev,
-                                            startDate: e.target.value,
-                                            // agar endDate startDate se chhoti ho to reset
-                                            endDate:
-                                                prev.endDate && e.target.value && prev.endDate < e.target.value
-                                                    ? ''
-                                                    : prev.endDate,
-                                        }))
-                                    }
-                                    }
-                                />
-                            </div>
+    setLoading(true);
+    try {
+      const companyId = user?.companyId?._id;
+      const userId = user?._id;
 
-                            {/* End Date */}
-                            <div className="grid gap-2">
-                                <Label htmlFor="projectEndDate">End Date</Label>
-                                <Input
-                                    id="projectEndDate"
-                                    type="date"
-                                    value={formData.endDate || ''}
-                                    min={formData.startDate || today}
-                                    disabled={!formData.startDate}
-                                    onChange={(e) =>
-                                        setFormData((prev) => ({
-                                            ...prev,
-                                            endDate: e.target.value,
-                                        }))
-                                    }
-                                />
+      let res;
+      if (isEdit) {
+        res = await updateProject(userId, companyId, formData);
+      } else {
+        res = await addProject(userId, companyId, formData);
+      }
 
-                                {!formData.startDate && (
-                                    <p className="text-xs text-muted-foreground">
-                                        Please select start date first
-                                    </p>
-                                )}
-                            </div>
-                        </div>
+      if (res?.status === 200 || res?.status === 201) {
+        toast({
+          title: isEdit ? "Project Updated" : "Project Created",
+          description: res.data.message || "Success",
+        });
+        setProjectListRefresh(true);
+        onClose();
+      } else {
+        toast({ title: "Error", description: res?.data?.message || "Failed", variant: "destructive" });
+      }
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err?.response?.data?.message || "Something went wrong",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[540px] w-[92vw] max-h-[91vh] p-0 gap-0 rounded-lg overflow-hidden">
+        <form onSubmit={handleSave} className="flex flex-col h-full">
+          <DialogHeader className="px-5 pt-5 pb-3 border-b shrink-0">
+            <DialogTitle className="text-lg font-semibold">
+              {isEdit ? 'Edit Project' : 'Create New Project'}
+            </DialogTitle>
+          </DialogHeader>
 
-                        {/* Priority */}
-                        <div className="grid gap-2">
-                            <Label htmlFor="projectPriority">Priority</Label>
-                            <Select
-                                value={formData.priority || 'medium'}
-                                onValueChange={(value: Priority) => setFormData({ ...formData, priority: value })}
-                            >
-                                <SelectTrigger id="projectPriority">
-                                    <SelectValue placeholder="Select priority" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="low" className='cursor-pointer'>Low</SelectItem>
-                                    <SelectItem value="medium" className='cursor-pointer'>Medium</SelectItem>
-                                    <SelectItem value="high" className='cursor-pointer'>High</SelectItem>
-                                    <SelectItem value="urgent" className='cursor-pointer'>Urgent</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+          {/* Scrollable content */}
+          <div
+            ref={scrollRef}
+            className="flex-1 overflow-y-auto px-5 py-5 space-y-4.5"
+          >
+            <div className="grid gap-1.5">
+              <Label htmlFor="name" className="text-sm font-medium">Project Name</Label>
+              <Input
+                id="name"
+                placeholder="Enter project name"
+                value={formData.name || ''}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                className="h-9 text-sm"
+              />
+            </div>
 
-                        {/* Remarks */}
-                        <div className="grid gap-2">
-                            <Label htmlFor="projectRemarks">Remarks</Label>
-                            <Textarea
-                                id="projectRemarks"
-                                placeholder="Additional comments or remarks"
-                                value={formData.remarks || ''}
-                                onChange={e => setFormData({ ...formData, remarks: e.target.value })}
-                            />
-                        </div>
-                    </div>
+            <div className="grid gap-1.5">
+              <Label htmlFor="description" className="text-sm font-medium md:mt-2">Description</Label>
+              <Textarea
+                id="description"
+                placeholder="Briefly describe the project (Optional)"
+                value={formData.description || ''}
+                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                className="min-h-[72px] text-sm resize-y"
+              />
+            </div>
 
-                    <DialogFooter className="flex-col-reverse sm:flex-row gap-2 sticky bottom-0 bg-white pt-4">
-                        <Button type="button" variant="outline" onClick={onClose} disabled={loading} className="w-full sm:w-auto">
-                            Cancel
-                        </Button>
-                        <Button
-                            // onClick={handleSave}
-                            disabled={loading || !formData.name || !formData.priority || !formData.startDate || !formData.endDate || !formData.description || !formData.remarks}
-                            className="w-full sm:w-auto">
-                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {isEdit ? 'Update Project' : 'Create Project'}
-                        </Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
-    );
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start md:mt-1">
+
+              <div className="flex flex-col gap-1 ">
+                <Label htmlFor="startDate" className="text-sm font-medium">
+                  Start Date
+                </Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  min={isEdit && !startDateTouched ? undefined : today}
+                  value={formData.startDate || ''}
+                  onChange={(e) => {
+                    setStartDateTouched(true);
+                    setFormData(prev => ({
+                      ...prev,
+                      startDate: e.target.value,
+                      endDate:
+                        prev.endDate &&
+                          e.target.value &&
+                          prev.endDate < e.target.value
+                          ? ''
+                          : prev.endDate,
+                    }));
+                  }}
+                  className="h-9 text-sm"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="endDate" className="text-sm font-medium">
+                  End Date
+                </Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  min={formData.startDate || today}
+                  disabled={!formData.startDate}
+                  value={formData.endDate || ''}
+                  onChange={e =>
+                    setFormData(prev => ({ ...prev, endDate: e.target.value }))
+                  }
+                  className="h-9 text-sm"
+                />
+                {!formData.startDate && (
+                  <p className="text-xs text-muted-foreground">
+                    Select start date first
+                  </p>
+                )}
+              </div>
+
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label htmlFor="priority" className="text-sm font-medium">Priority</Label>
+              <Select
+                value={formData.priority || 'medium'}
+                onValueChange={(v: Priority) => setFormData({ ...formData, priority: v })}
+              >
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-1.5">
+              <Label htmlFor="remarks" className="text-sm font-medium md:mt-2">Remarks</Label>
+              <Textarea
+                id="remarks"
+                placeholder="Add any additional notes (Optional)"
+                value={formData.remarks || ''}
+                onChange={e => setFormData({ ...formData, remarks: e.target.value })}
+                className="min-h-[72px] text-sm resize-y "
+              />
+            </div>
+          </div>
+
+          {/* Footer + scroll hint */}
+          <div className="relative shrink-0 border-t bg-background">
+            <DialogFooter className="px-5 py-4 gap-3 flex-col-reverse sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={loading}
+                className="h-9 text-sm sm:w-auto w-full"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={loading || !formData.name  || !formData.startDate || !formData.endDate || !formData.priority}
+                className="h-9 text-sm sm:w-auto w-full"
+              >
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isEdit ? 'Update Project' : 'Create Project'}
+              </Button>
+            </DialogFooter>
+
+            {showScrollArrow && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 pointer-events-none">
+                <div className="flex flex-col items-center text-muted-foreground animate-bounce">
+                  <ChevronDown className="h-6 w-6 opacity-70" />
+                  <span className="text-xs opacity-60 mt-0.5">scroll for more</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 };
 
 export default ProjectForm;

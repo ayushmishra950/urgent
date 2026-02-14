@@ -13,9 +13,10 @@ import TaskStatusChangeModal from "./cards/TaskStatusChangeModal";
 import SubTaskDetailCard from "./cards/SubTaskDetailCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { getSubTask, statusChangeSubTask, reassignSubTask, deleteSubTask } from "@/services/Service";
+import { getSubTask, statusChangeSubTask, reassignSubTask, deleteSubTask , getEmployees} from "@/services/Service";
 import { formatDate } from "@/services/allFunctions";
 import DeleteCard from "@/components/cards/DeleteCard";
+import { useLocation } from "react-router-dom";
 
 
 const SubTask: React.FC = () => {
@@ -38,17 +39,23 @@ const SubTask: React.FC = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedSubTaskId, setSelectedSubTaskId] = useState(null);
-
+    const [employeeList, setEmployeeList] = useState<any[]>([]);
+  
+  const location = useLocation();
+  const taskId = location?.state?.id;
+  const taskName = location?.state?.taskName;
+  const projectName = location?.state?.projectName;
   const today = new Date();
 
-const filteredSubTasks = subTaskList.filter((t) => {
-  const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase());
+  const filteredSubTasks = subTaskList.filter((t) => {
+    const matchesTasks = taskId ? t.taskId?._id === taskId : true;
+    const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase());
 
-  const matchesStatus = filterStatus === "all" || (filterStatus === "overdue"
+    const matchesStatus = filterStatus === "all" || (filterStatus === "overdue"
       ? new Date(t.endDate) < today : t.status === filterStatus);
 
-  return matchesSearch && matchesStatus;
-});
+    return matchesTasks && matchesSearch && matchesStatus;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -65,8 +72,48 @@ const filteredSubTasks = subTaskList.filter((t) => {
     }
   };
 
+  console.log(user)
+    // =================== Fetch Employees ===================
+    const handleGetEmployees = async () => {
+      try {
+        const data = await getEmployees(user?.companyId?._id || user?.createdBy?._id);
+        console.log(data, user)
+        if (Array.isArray(data)) setEmployeeList(data);
+      } catch (err: any) {
+        toast({
+          title: "Error",
+          description: err?.response?.data?.message || "Something went wrong",
+          variant: "destructive",
+        });
+      }
+    };
+
+      useEffect(()=>{
+        if(user?.role !=="admin" && user?.taskRole !=="manager") return;
+          handleGetEmployees();
+        }, []);
+
+           const handleOpenSubTaskForm = () => {
+  // 1️⃣ No employees
+  if (!employeeList || employeeList.length === 0) {
+    return toast({ title: "No Employees Found", description: "Please add at least one employee before creating a project.", variant: "destructive" });
+  }
+
+  // 2️⃣ Check if at least one manager exists
+  const hasManager = employeeList.some(
+    (emp) => emp?.taskRole && emp.taskRole !== "none"
+  );
+  if (!hasManager) {
+    return toast({ title: "Manager Required", description: "Please assign at least one employee as a manager before creating a project.", variant: "destructive" });
+  }
+  // 3️⃣ All good
+  setInitialData(null);
+  setIsFormOpen(true);
+};
+
+
   const handleGetSubTask = async () => {
-    if(!user?._id || (!user?.companyId?._id && !user?.createdBy?._id)) return;
+    if (!user?._id || (!user?.companyId?._id && !user?.createdBy?._id)) return;
     let obj = { companyId: user?.companyId?._id || user?.createdBy?._id, userId: user?._id }
     try {
       const res = await getSubTask(obj);
@@ -131,7 +178,7 @@ const filteredSubTasks = subTaskList.filter((t) => {
   }
 
   const handleConfirmDelete = async () => {
-    if (!selectedSubTaskId || (!user?.companyId?._id&&!user?.createdBy?._id) || !user?._id) return;
+    if (!selectedSubTaskId || (!user?.companyId?._id && !user?.createdBy?._id) || !user?._id) return;
     let obj = { subtaskId: selectedSubTaskId, companyId: user?.companyId?._id || user?.createdBy?._id, adminId: user?._id }
     setIsDeleting(true);
     console.log(obj)
@@ -139,7 +186,7 @@ const filteredSubTasks = subTaskList.filter((t) => {
       const res = await deleteSubTask(obj);
       console.log(res)
       if (res.status === 200) {
-        
+
         toast({
           title: "Sub Task Deleted.",
           description: `${res?.data?.message}`,
@@ -151,7 +198,7 @@ const filteredSubTasks = subTaskList.filter((t) => {
       toast({
         title: "Error",
         description: error?.response?.data?.message || "Something went wrong",
-        variant:"destructive"
+        variant: "destructive"
       });
     } finally {
       setIsDeleting(false);
@@ -161,7 +208,7 @@ const filteredSubTasks = subTaskList.filter((t) => {
 
   return (
     <>
-      <SubTaskForm isOpen={isFormOpen} setSubTaskListRefresh={setSubTaskListRefresh} onClose={() => setIsFormOpen(false)} initialData={initialData} />
+      <SubTaskForm isOpen={isFormOpen} taskId={null} setSubTaskListRefresh={setSubTaskListRefresh} onClose={() => setIsFormOpen(false)} initialData={initialData} />
       <ReassignForm
         isOpen={reasignForm}
         onClose={() => { setReasignForm(false) }}
@@ -180,31 +227,59 @@ const filteredSubTasks = subTaskList.filter((t) => {
       <SubTaskDetailCard isOpen={isSubTaskDetailCardOpen} subTaskId={selectedSubTaskId} onClose={() => setIsSubTaskDetailCardOpen(false)} />
       <TaskStatusChangeModal name={name} task={selectedSubTask} isOpen={isTaskStatusChangeModalOpen} newStatus={newStatus} setNewStatus={setNewStatus} onConfirm={handleChangeStatus} onClose={() => setIsTaskStatusChangeModalOpen(false)} />
       <div className="flex flex-col min-h-screen bg-gray-50/50 p-6 space-y-6">
-       <div className="mb-4">
-                                <button
-                                  onClick={() => window.history.back()}
-                                  className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-                                >
-                                  <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-                                </button>
-                              </div>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900">Sub-Tasks</h2>
-            <p className="text-muted-foreground">Detailed breakdown of tasks and their progress.</p>
-          </div>
-          <Button className="w-full md:w-auto" onClick={() => { setInitialData(null); setIsFormOpen(true) }}>
-            <Plus className="mr-2 h-4 w-4" /> Create Sub-Task
-          </Button>
+        <div className="md:mt-[-45px] md:mb-[-15px]">
+          <button
+            onClick={() => window.history.back()}
+            className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
+          </button>
         </div>
-
         <Card>
           <CardHeader>
-            <CardTitle>Sub-Task List</CardTitle>
-            <CardDescription>
-              Manage individual sub-tasks, track parent task association, and monitor completion status.
-            </CardDescription>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              {/* Left side: Project > Task and Sub-Task List */}
+              <div className="flex flex-col sm:flex-row sm:items-baseline gap-2">
+                {taskId && projectName && taskName ? (
+                  <>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">
+                      {projectName} &gt; {taskName}
+                    </h1>
+                    <h2 className="text-xl font-semibold text-gray-700 truncate">
+                      Sub-Task List
+                    </h2>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">
+                      Sub-Task List
+                    </h2>
+                    <p className="text-gray-500 text-sm mt-1">
+                      Manage individual sub-tasks, track parent task association, and monitor completion status.
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {/* Right side: Create Sub-Task Button */}
+              {user?.taskRole !== "none" && (
+                <Button
+                  className="w-full sm:w-auto mt-2 sm:mt-0"
+                  onClick={handleOpenSubTaskForm}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Create Sub-Task
+                </Button>
+              )}
+            </div>
+
+            {/* Optional description under Project > Task */}
+            {taskId && projectName && taskName && (
+              <p className="text-gray-500 text-sm mt-1">
+                Manage tasks for this project, track progress, and deadlines.
+              </p>
+            )}
           </CardHeader>
+
           <CardContent>
             {/* Search and Filter */}
             <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -242,7 +317,7 @@ const filteredSubTasks = subTaskList.filter((t) => {
                     <TableHead>Sub-Task Title</TableHead>
                     <TableHead>Parent Task</TableHead>
                     <TableHead>Employee</TableHead>
-                     <TableHead>AssignedBy</TableHead>
+                    <TableHead>AssignedBy</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Due Date</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -255,8 +330,8 @@ const filteredSubTasks = subTaskList.filter((t) => {
                         <TableCell className="font-medium">{subTask.name}</TableCell>
                         <TableCell>{subTask.taskId.name}</TableCell>
                         <TableCell>{subTask.employeeId?.fullName} ({subTask?.employeeId?.department})</TableCell>
-                        <TableCell >{subTask?.createdBy?.username ||subTask?.createdBy?.fullName} ({subTask?.createdByRole==="Employee"?"Manager":"Admin"})</TableCell>
-                      
+                        <TableCell >{subTask?.createdBy?.username || subTask?.createdBy?.fullName} ({subTask?.createdByRole === "Employee" ? "Manager" : "Admin"})</TableCell>
+
                         <TableCell>
                           <Badge variant="outline" className={getStatusColor(subTask.status)}>
                             {subTask.status === "active" ? "In_Progress" : (subTask?.status.charAt(0).toUpperCase() + subTask?.status?.slice(1))}
@@ -274,7 +349,8 @@ const filteredSubTasks = subTaskList.filter((t) => {
                             <DropdownMenuContent align="end" className="w-44">
                               <DropdownMenuItem
                                 className="flex items-center gap-2 cursor-pointer"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setSelectedSubTaskId(subTask?._id)
                                   setIsSubTaskDetailCardOpen(true);
                                 }}
@@ -284,7 +360,8 @@ const filteredSubTasks = subTaskList.filter((t) => {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="flex items-center gap-2 cursor-pointer"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setInitialData(subTask);
                                   setIsFormOpen(true);
                                 }}
@@ -293,19 +370,19 @@ const filteredSubTasks = subTaskList.filter((t) => {
                                 Edit
                               </DropdownMenuItem>
 
-                              <DropdownMenuItem onClick={() => { setSelectedSubTask(subTask); setReasignForm(true) }} className="flex items-center gap-2 cursor-pointer">
+                              <DropdownMenuItem onClick={(e) => {e.stopPropagation(); setSelectedSubTask(subTask); setReasignForm(true) }} className="flex items-center gap-2 cursor-pointer">
                                 <UserCheck className="h-4 w-4 text-blue-600" />
                                 Reassign
                               </DropdownMenuItem>
 
-                              <DropdownMenuItem onClick={() => { setSelectedSubTask(subTask); setIsTaskStatusChangeModalOpen(true) }} className="flex items-center gap-2 cursor-pointer">
+                              <DropdownMenuItem onClick={(e) => {e.stopPropagation(); setSelectedSubTask(subTask); setIsTaskStatusChangeModalOpen(true) }} className="flex items-center gap-2 cursor-pointer">
                                 <Filter className="h-4 w-4 text-purple-600" />
                                 Change Status
                               </DropdownMenuItem>
 
                               <DropdownMenuSeparator />
 
-                              <DropdownMenuItem onClick={() => { setSelectedSubTaskId(subTask?._id); setIsDeleteDialogOpen(true) }} className="flex items-center gap-2 text-red-600 cursor-pointer">
+                              <DropdownMenuItem onClick={(e) => {e.stopPropagation(); setSelectedSubTaskId(subTask?._id); setIsDeleteDialogOpen(true) }} className="flex items-center gap-2 text-red-600 cursor-pointer">
                                 <Trash2 className="h-4 w-4" />
                                 Delete
                               </DropdownMenuItem>

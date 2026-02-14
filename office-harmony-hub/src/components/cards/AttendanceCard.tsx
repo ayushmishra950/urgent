@@ -3,35 +3,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationContext";
-
-interface AttendanceItem {
-  _id: string;
-  clockIn: string;
-  clockOut: string;
-  date: string;
-  hoursWorked: number;
-  status: string;
-  userId: {
-    _id: string;
-    fullName: string;
-    profileImage: string;
-  };
-}
-
-interface Props {
-  attendanceRefresh: number; // trigger refresh from parent
-}
-const months = [
-  "January", "February", "March", "April",
-  "May", "June", "July", "August",
-  "September", "October", "November", "December"
-];
-
+import {getAttendanceData, getEmployees} from "@/services/Service";
+import {AttendanceItem,Props, months } from "@/types/index";
+import {getStatusStyle, getMonthlySummary}  from "@/services/allFunctions";
+ 
 const AttendanceTable: React.FC<Props> = ({ attendanceRefresh }) => {
   const [attendanceList, setAttendanceList] = useState<AttendanceItem[]>([]);
   const [payrollList, setPayrollList] = useState<any[]>([]);
@@ -39,6 +18,7 @@ const AttendanceTable: React.FC<Props> = ({ attendanceRefresh }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const daysInMonth = 31;
+  
 
   const today = new Date();
   const todayDate = today.getDate();
@@ -49,7 +29,29 @@ const AttendanceTable: React.FC<Props> = ({ attendanceRefresh }) => {
   const getTodayDate = () => today.toISOString().split("T")[0];
 
   const [selectedDate, setSelectedDate] = useState(getTodayDate());
-  const { notifications, markAsRead, deleteNotification } = useNotifications();
+  const { notifications } = useNotifications();
+  const [employeeList, setEmployeeList] = useState([]);
+
+
+  
+    // =================== Fetch Employees ===================
+    const handleGetEmployees = async () => {
+      try {
+        const data = await getEmployees(user?.companyId?._id);
+        if (Array.isArray(data)) setEmployeeList(data);
+      } catch (err: any) {
+        toast({
+          title: "Error",
+          description: err?.response?.data?.message || "Something went wrong",
+          variant: "destructive",
+        });
+      }
+    };
+    useEffect(()=>{
+      if(user?.role === "admin" && user?.taskRole === "manager"){
+      handleGetEmployees()
+      }
+    },[])
 
   // ================= Fetch Attendance =================
   const fetchAttendances = async (date: string) => {
@@ -58,12 +60,11 @@ const AttendanceTable: React.FC<Props> = ({ attendanceRefresh }) => {
 
       const month = selected.getMonth() + 1; // JS months = 0–11
       const year = selected.getFullYear();
+       const companyId = user?.role === "employee"? user?.createdBy?._id : user?.companyId?._id;
+      if(!month || !year || !companyId) return;
 
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/attendance`,
-        { params: { month, year, companyId: user?.role === "employee" ? user?.createdBy?._id : user?.companyId?._id } });
+       const res = await getAttendanceData(month, year, companyId);
 
-      console.log(res?.data)
       if (Array.isArray(res?.data?.records)) {
         setAttendanceList(res.data.records);
       }
@@ -135,11 +136,22 @@ const AttendanceTable: React.FC<Props> = ({ attendanceRefresh }) => {
 
   const calculateSalaryAfterCut = (userId: string) => {
     const payroll = payrollMap[userId];
-    if (!payroll) return null;
+    let totalSalary = 0;
+    let cutAmount = 0;
+    let finalSalary = 0;
+    if (!payroll){
+       totalSalary = Number(employeeList.find((e)=> e?._id === userId)?.monthSalary || 0);
+       console.log(totalSalary)
+        return {
+      totalSalary,
+      cutAmount,
+      finalSalary,
+    };
+    }
+    else{
+    const summary = getMonthlySummary(userId, attendanceMap);
 
-    const summary = getMonthlySummary(userId);
-
-    const totalSalary =
+     totalSalary =
       Number(payroll.basic || 0) +
       Number(payroll.allowance || 0) -
       Number(payroll.deductions || 0);
@@ -159,36 +171,7 @@ const AttendanceTable: React.FC<Props> = ({ attendanceRefresh }) => {
       cutAmount,
       finalSalary,
     };
-  };
-
-
-
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "Present": return { bg: "bg-green-100 text-green-800", text: "Present" };
-      case "Absent": return { bg: "bg-red-100 text-red-800", text: "Absent" };
-      case "Half Day": return { bg: "bg-yellow-100 text-yellow-800", text: "Half Day" };
-      case "Late": return { bg: "bg-orange-100 text-orange-800", text: "Late" };
-      case "No Data": return { bg: "bg-blue-50 text-blue-400", text: "-" };
-      default: return { bg: "bg-gray-100 text-gray-500", text: "-" };
-    }
-  };
-
-  const getMonthlySummary = (userId: string) => {
-    const userData = attendanceMap[userId];
-    const summary = { present: 0, absent: 0, halfDay: 0, late: 0 };
-    if (!userData) return summary;
-
-    Object.values(userData.attendanceByDate).forEach((att: any) => {
-      switch (att.status) {
-        case "Present": summary.present++; break;
-        case "Absent": summary.absent++; break;
-        case "Half Day": summary.halfDay++; break;
-        case "Late": summary.late++; break;
-      }
-    });
-
-    return summary;
+  }
   };
 
   // ================= Render =================
@@ -234,7 +217,7 @@ const AttendanceTable: React.FC<Props> = ({ attendanceRefresh }) => {
 
             <tbody>
               {users.map((emp) => {
-                const summary = getMonthlySummary(emp._id);
+                const summary = getMonthlySummary(emp._id, attendanceMap);
                 return (
                   <tr key={emp._id} className="hover:bg-muted/30">
                     <td className="sticky left-0 z-10 bg-white border-r px-5 py-4 font-medium min-w-[240px] shadow-md">
@@ -266,14 +249,15 @@ const AttendanceTable: React.FC<Props> = ({ attendanceRefresh }) => {
                       {summary.late > 0 && <div className="font-semibold text-orange-700">L: {summary.late}</div>}
                       {user?.role==="admin"? (() => {
                         const salary = calculateSalaryAfterCut(emp._id);
+                        console.log(salary)
                         if (!salary) return null;
 
                         return (
                           <div className="mt-2 text-[10px] text-muted-foreground">
-                            <div>Total Salary: ₹{salary.totalSalary.toFixed(0)}</div>
-                            <div className="text-red-600">Cut: -₹{salary.cutAmount.toFixed(0)}</div>
+                            <div>Total Salary: ₹{salary?.totalSalary?.toFixed(0)}</div>
+                            <div className="text-red-600">Cut: -₹{salary?.cutAmount?.toFixed(0)}</div>
                             <div className="font-semibold text-green-700">
-                              Pay: ₹{salary.finalSalary.toFixed(0)}
+                              Pay: ₹{salary?.finalSalary?.toFixed(0)}
                             </div>
                           </div>
                         );

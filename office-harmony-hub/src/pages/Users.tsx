@@ -14,16 +14,8 @@ import RelieveEmployeeCard from "@/components/cards/RelieveEmployeeCard"
 import AdminFormDialog from "@/Forms/AdminFormDialog";
 import AdminListCard from "@/components/cards/AdminListCard";
 import { Helmet } from "react-helmet-async";
+import {formatDate} from "@/services/allFunctions"
 
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-};
-// usage
 
 const Users: React.FC = () => {
   const { user } = useAuth();
@@ -231,6 +223,7 @@ const Users: React.FC = () => {
         isEditMode={isEditDialogOpen}
         initialData={initialData}
         setEmployeeListRefresh={setEmployeeListRefresh}
+        selectedDepartmentName={""} //blank hai kyuki y sirf department k case m use hoga
       />
 
       <AdminFormDialog
@@ -335,7 +328,7 @@ const Users: React.FC = () => {
       )}
 
 {/* Back Button */}
-<div className="mb-4">
+<div className="md:mt-[-20px] md:mb-[-10px]">
   <button
     onClick={() => window.history.back()}
     className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"

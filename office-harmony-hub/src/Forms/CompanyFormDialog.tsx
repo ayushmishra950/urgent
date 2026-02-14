@@ -91,7 +91,7 @@ const CompanyFormDialog = ({
             formData.append("address", form.address);
             formData.append("website", form.website);
             formData.append("isActive", form.isActive.toString());
-            if (form.logo) formData.append("logo", form.logo);
+            if (form?.logo) formData.append("logo", form?.logo);
             let res = null;
             if (!mode) {
                 res = await axios.post(`${import.meta.env.VITE_API_URL}/api/company/add`, formData);
@@ -178,6 +178,7 @@ const CompanyFormDialog = ({
                                 value={form.address}
                                 onChange={handleChange}
                                 placeholder="123, ABC Street, City"
+                                required
                             />
                         </div>
 
@@ -188,6 +189,7 @@ const CompanyFormDialog = ({
                                 value={form.website}
                                 onChange={handleChange}
                                 placeholder="https://company.com"
+                                required
                             />
                         </div>
                     </div>
@@ -232,7 +234,7 @@ const CompanyFormDialog = ({
                             Cancel
                         </Button>
 
-                        <Button type="submit" disabled={loading || !form?.name || !form?.email || !form?.contactNumber || !form?.website || !form?.logoPreview}>
+                        <Button type="submit" disabled={loading || !form?.name || !form?.email || !form?.contactNumber || !form?.website}>
                             {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                             {mode ? "Update" : "Register"}
                         </Button>

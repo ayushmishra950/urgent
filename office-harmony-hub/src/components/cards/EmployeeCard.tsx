@@ -3,66 +3,13 @@ import React, { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import RelieveEmployeeCard from "@/components/cards/RelieveEmployeeCard";
 import { EmployeeFormDialog } from "@/Forms/EmployeeFormDialog";
-import { getEmployeebyId, handleGetPdfLetter, handleAddPdfLetter as addPdfLetterApi } from "@/services/Service";
+import { getEmployeebyId, handleGetPdfLetter, handleAddPdfLetter as addPdfLetterApi, getSinglePayRoll } from "@/services/Service";
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-
-type EmployeeDocument = {
-  uploaded: boolean;
-  url: string | null;
-};
-
-const dummyEmployee = {
-  id: "EMP001",
-  fullName: "Rahul Sharma",
-  email: "rahul.sharma@example.com",
-  contactNumber: "9876543210",
-  department: "IT",
-  designation: "Software Engineer",
-  position: "Frontend Developer",
-  employeeType: "Permanent",
-  status: "ACTIVE",
-  joinDate: "01/03/2023",
-  relievingDate: null,
-  profilePicture: "https://i.pravatar.cc/300",
-  monthlySalary: 60000,
-  lpa: 7.2,
-  roleDescription: "Responsible for frontend development and UI optimization.",
-  remarks: ["Good performance", "Consistent delivery"],
-  teamsProjects: ["OMS Project", "HRMS"],
-  documents: {
-    Aadhaar: { uploaded: true, url: "https://via.placeholder.com/400" },
-    PAN: { uploaded: true, url: "https://via.placeholder.com/400" },
-    BankPassbook: { uploaded: false, url: null },
-    SalarySlip: { uploaded: true, url: "https://via.placeholder.com/400" }
-  },
-  salaryHistory: [
-    {
-      date: "01/01/2024",
-      oldSalary: 50000,
-      newSalary: 60000,
-      remarks: "Annual Increment"
-    }
-  ],
-  history: [
-    {
-      eventType: "Salary Change",
-      oldData: { monthSalary: 50000 },
-      newData: { monthSalary: 60000 },
-      effectiveDate: "01/01/2024",
-      changedBy: "Admin",
-      remarks: "Performance based increment"
-    },
-    {
-      eventType: "Profile Update",
-      oldData: null,
-      newData: null,
-      effectiveDate: "15/02/2024",
-      changedBy: "Admin",
-      remarks: "Profile picture updated"
-    }
-  ]
-};
+import {ArrowLeft} from "lucide-react";
+import {getStatusColorfromEmployee, getEventColor, formatDate} from "@/services/allFunctions";
+import {Helmet} from "react-helmet-async";
+import SalarySlipCard from '@/components/cards/SalarySlipCard';
 
 const dummyLetters = [
   {
@@ -71,42 +18,9 @@ const dummyLetters = [
   }
 ];
 
-
-const formatDateForInput = (dateStr?: string) => {
-  if (!dateStr) return "";
-
-  // Case 1: ISO date from backend (2026-01-09T00:00:00.000Z)
-  if (dateStr.includes("T")) {
-    return new Date(dateStr).toISOString().slice(0, 10);
-  }
-
-  // Case 2: Already in YYYY-MM-DD (from input[type=date])
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    return dateStr;
-  }
-
-  // Case 3: Slash format (DD/MM/YYYY or MM/DD/YYYY)
-  if (dateStr.includes("/")) {
-    const parts = dateStr.split("/");
-    let day, month, year;
-
-    if (Number(parts[0]) > 12) {
-      [day, month, year] = parts; // DD/MM/YYYY
-    } else {
-      [month, day, year] = parts; // MM/DD/YYYY
-    }
-
-    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-  }
-
-  return "";
-};
-
-
 const EmployeeDashboard = () => {
   const { toast } = useToast();
 
-  const [employee, setEmployee] = useState(dummyEmployee);
   const [allLetter, setAllLetter] = useState(dummyLetters);
   const [previewDoc, setPreviewDoc] = useState<any>(null);
   const [isPreview, setIsPreview] = useState(false);
@@ -115,34 +29,20 @@ const EmployeeDashboard = () => {
   const [showRelieve, setShowRelieve] = useState(false);
   const [singleUserData, setSingleUserData] = useState(null);
   const [history, setHistory] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [employeeListRefresh, setEmployeeListRefresh] = useState(false);
+  const [singlePayrolls, setSinglePayrolls] = useState<any[]>([]);
+    const [pdfOpenForm, setPdfOpenForm] = useState(false);
 
   const { id } = useParams();
   const {user} = useAuth();
 
-  // if (!employee) {
-  //   return <div className="p-10 text-center">Loading...</div>;
-  // }
-
-  const getStatusColor = (status: string) => {
-
-    switch (status) {
-      case 'ACTIVE': return 'bg-green-100 text-green-800 border-green-500';
-      case 'RELIEVED': return 'bg-red-100 text-red-800 border-red-500';
-      case 'ON_HOLD': return 'bg-yellow-100 text-yellow-800 border-yellow-500';
-      default: return 'bg-gray-100 text-gray-800 border-gray-500';
-    }
-  };
-
-  const getEventColor = (eventType: string) => {
-    switch (eventType) {
-      case 'Salary Change': return 'bg-purple-100 text-purple-800';
-      case 'Profile Update': return 'bg-teal-100 text-teal-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const showSalarySlip = async() =>{
+    if(!singlePayrolls || singlePayrolls.length === 0) return toast({title:"Slip Error", description:"Salary Slip Not Found.", variant:"destructive"})
+        setPdfOpenForm(true);
+  }
 
   const handleGetEmployee = async () => {
     try {
@@ -151,9 +51,11 @@ const EmployeeDashboard = () => {
       if (data) {
         setSingleUserData(data.employee || null);
         setHistory(data.history || []);
+        setTasks(data?.task || []) 
       } else {
         setSingleUserData(null);
         setHistory([]);
+        setTasks([]);
       }
     } catch (err: any) {
       console.log(err);
@@ -214,7 +116,28 @@ const EmployeeDashboard = () => {
     }
   };
 
-console.log("Single User Data:", singleUserData);
+  
+    const handleGetSinglePayRoll = async () => {
+       if(!id || !user?.companyId?._id) return;
+      try {
+        const data = await getSinglePayRoll(id, user?.companyId?._id);
+        console.log("Single Payroll:", data);
+        if (Array.isArray(data)) {
+          setSinglePayrolls(data);
+        }
+      } catch (error) {
+        console.error("Error fetching all payrolls:", error);
+      }
+    };
+  
+    useEffect(() => {
+      if (!user) return; // agar user null ho to kuch na kare
+  
+      if (user.role === 'admin') {
+        handleGetSinglePayRoll();
+      }
+    }, [user]);
+
   useEffect(() => {
     if (employeeListRefresh) {
       handleGetEmployee();
@@ -229,6 +152,19 @@ console.log("Single User Data:", singleUserData);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+        <Helmet>
+              <title>Employe Detail Page</title>
+              <meta name="description" content="This is the home page of our app" />
+            </Helmet>
+         <div className="md:mt-[-20px] md:mb-[5px]">
+        <button
+          onClick={() => window.history.back()}
+          className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+        >
+          <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
+        </button>
+      </div>
+            {pdfOpenForm && <SalarySlipCard data={singlePayrolls} onClose={() => setPdfOpenForm(false)} />}
       {/* Top Navbar / Header */}
       <header className="bg-white dark:bg-gray-900 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
@@ -237,7 +173,7 @@ console.log("Single User Data:", singleUserData);
             <p className="text-sm text-gray-500 dark:text-gray-400">Detailed view for {singleUserData?.fullName}</p>
           </div>
           <div className="flex items-center space-x-4">
-            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(singleUserData?.status)}`}>
+            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColorfromEmployee(singleUserData?.status)}`}>
               {singleUserData?.status}
             </span>
           </div>
@@ -250,6 +186,7 @@ console.log("Single User Data:", singleUserData);
         isEditMode={isEditDialogOpen}
         initialData={singleUserData}
         setEmployeeListRefresh={setEmployeeListRefresh}
+        selectedDepartmentName={""} //blank hai kyuki y sirf department k case m use hoga
       />
       {
         showRelieve && (
@@ -290,12 +227,12 @@ console.log("Single User Data:", singleUserData);
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Join Date</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{formatDateForInput(singleUserData?.joinDate)}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{formatDate(singleUserData?.joinDate)}</p>
                 </div>
                 {singleUserData?.relievingDate && (
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Relieving Date</p>
-                    <p className="font-medium text-gray-900 dark:text-white">{formatDateForInput(singleUserData?.relievingDate)}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">{formatDate(singleUserData?.relievingDate)}</p>
                   </div>
                 )}
               </div>
@@ -360,7 +297,9 @@ console.log("Single User Data:", singleUserData);
                 {/* Keep the last three buttons as-is */}
                 <button
                   className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition"
-                  onClick={() => setIsSalarySlipPreview(true)}
+                    onClick={() => {
+                                showSalarySlip();
+                              }}
                 >
                   All Salary Slips
                 </button>
@@ -426,7 +365,6 @@ console.log("Single User Data:", singleUserData);
 
           {isPreview && previewDoc && (
             <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-3">
-
               {/* Modal Card */}
               <div
                 className={`
@@ -441,7 +379,6 @@ console.log("Single User Data:", singleUserData);
                   overflow-hidden
                 `}
               >
-
                 {/* Header */}
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="text-base sm:text-lg font-semibold truncate">
@@ -480,7 +417,6 @@ console.log("Single User Data:", singleUserData);
                     />
                   )}
                 </div>
-
                 {/* Actions (only for image) */}
                 {previewDoc.type === "image" && (
                   <div className="flex justify-end gap-3 mt-4">
@@ -496,7 +432,6 @@ console.log("Single User Data:", singleUserData);
               </div>
             </div>
           )}
-
           {/* Main Content Area */}
           <div className="lg:col-span-8 space-y-6">
             {/* Salary & Compensation */}
@@ -523,7 +458,6 @@ console.log("Single User Data:", singleUserData);
                           : 'No increment yet';
                       })()
                     }
-
                   </p>
                 </div>
               </div>
@@ -568,17 +502,17 @@ console.log("Single User Data:", singleUserData);
               </p>
 
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                Assigned Teams / Projects
+                Assigned Teams / Task
               </h3>
 
-              {singleUserData?.teamsProjects && singleUserData.teamsProjects.length > 0 ? (
+              {tasks && tasks?.length > 0 ? (
                 <div className="flex flex-wrap gap-2 max-h-[400px] overflow-y-auto pr-2 projects-scroll">
-                  {singleUserData.teamsProjects.map((proj, i) => (
+                  {tasks?.map((task, i) => (
                     <span
-                      key={i}
+                      key={task?._id}
                       className="px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded-full text-sm"
                     >
-                      {proj}
+                      {task.name}
                     </span>
                   ))}
                 </div>
@@ -587,16 +521,12 @@ console.log("Single User Data:", singleUserData);
                   No projects assigned
                 </div>
               )}
-
             </div>
-
-
             {/* Remarks */}
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md p-6">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                 Remarks & Notes
               </h2>
-
               {singleUserData?.remarks ? (
                 Array.isArray(singleUserData.remarks) ? (
                   singleUserData.remarks.length > 0 ? (
@@ -628,14 +558,11 @@ console.log("Single User Data:", singleUserData);
                 </div>
               )}
             </div>
-
-
             {/* History Timeline */}
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-md p-6">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                 Activity History
               </h2>
-
               {history.length === 0 ? (
                 /* NO HISTORY STATE */
                 <div className="flex items-center justify-center h-[300px] text-gray-500 dark:text-gray-400 text-sm">
@@ -669,9 +596,8 @@ console.log("Single User Data:", singleUserData);
                                 : "N/A"}
                           </span>
                         </div>
-
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                          Changed by: {event.changedBy || "System"}
+                          Changed by: {event?.changedBy?.admins?.[0]?.username || "Admin"}
                           {event.remarks && ` • ${event.remarks}`}
                         </p>
                       </div>
@@ -680,8 +606,6 @@ console.log("Single User Data:", singleUserData);
                 </div>
               )}
             </div>
-
-
           </div>
         </div>
       </main>
