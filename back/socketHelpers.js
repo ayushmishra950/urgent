@@ -6,7 +6,7 @@ let io;
 function initSocket(server) {
   io = new Server(server, {
     cors: {
-      origin: "http://localhost:8080",
+      origin: "https://urgent-frontend-3jiy.onrender.com",
       methods: ["GET", "POST"],
       credentials: true,
     },
