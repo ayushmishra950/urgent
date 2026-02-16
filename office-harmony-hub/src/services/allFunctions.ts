@@ -275,8 +275,8 @@ export const headingManage = (value: string, role: string, subPage?: string, tas
       return { title: "Reports & Analytics", description: "Comprehensive insights into your organization's performance.", icon: "BarChart3" };
     case "Setting": 
       return { title: "Setting", description: "Manage your account settings and preferences.", icon: "SettingsIcon" };
-    case "Company": 
-      return { title: "Company", description: "", icon: "LayoutDashboard" };
+    case "Companies": 
+      return { title: "Company", description: "Manage your company's profile, settings, and overall structure.", icon: "Building2" };
     default: 
       return { title: "Admin Dashboard", description: "Welcome back! Here's what's happening today.", icon: "LayoutDashboard" };
   }
