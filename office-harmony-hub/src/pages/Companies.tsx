@@ -90,28 +90,10 @@ const Companies: React.FC = () => {
         <title>Company Page</title>
         <meta name="description" content="This is the home page of our app" />
       </Helmet>
-       <div className="md:mt-[-20px] md:mb-[5px]">
-             <button
-               onClick={() => window.history.back()}
-               className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-             >
-               <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-             </button>
-           </div>
+
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {/* Left side */}
-        <div>
-          <h1 className="page-header flex items-center gap-2">
-            <Building2 className="w-7 h-7 text-primary" />
-            Companies
-          </h1>
-          <p className="text-muted-foreground">
-            Manage all registered companies in the system
-          </p>
-        </div>
-
+      <div className="flex flex-col gap-4 sm:flex-row md:mt-[-12px] sm:items-center sm:justify-end">
         {/* Right side button */}
         <Button className="self-start sm:self-auto" onClick={() => { setInitialData(null); setMode(false); setIsDialogOpen(true) }}>
           <Plus className="w-4 h-4 mr-2" />
@@ -138,7 +120,7 @@ const Companies: React.FC = () => {
       </div>
 
       {/* Search */}
-      <div className="relative max-w-md">
+      <div className="relative max-w-md md:mt-[-20px]">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           placeholder="Search companies..."
