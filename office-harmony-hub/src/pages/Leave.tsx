@@ -172,29 +172,8 @@ const Leave: React.FC = () => {
         title="Delete Leave Type?"
         message="This Action Will permanently Delete This Leave Type."
       />
-    <div className="md:mt-[-20px] md:mb-[-10px]">
-      <button
-        onClick={() => window.history.back()}
-        className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-      >
-        <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-      </button>
-    </div>
-
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="page-header flex items-center gap-2">
-            <CalendarDays className="w-7 h-7 text-primary" />
-            Leave Management
-          </h1>
-          <p className="text-muted-foreground">
-            {user?.role === 'employee'
-              ? 'Apply for leave and track your requests'
-              : 'Manage employee leave requests & types'}
-          </p>
-        </div>
-
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end md:mt-[-15px] gap-4">
         <div className="flex flex-wrap gap-3">
           {user?.role === 'employee' && (
             <ApplyLeaveDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} setLeaveTypeRefresh={setLeaveTypeRefresh} initialData={initialData} mode={mode} />

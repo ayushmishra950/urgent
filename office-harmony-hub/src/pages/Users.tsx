@@ -15,7 +15,7 @@ import AdminFormDialog from "@/Forms/AdminFormDialog";
 import AdminListCard from "@/components/cards/AdminListCard";
 import { Helmet } from "react-helmet-async";
 import {formatDate} from "@/services/allFunctions"
-
+ import AddManagerForm from "@/task/forms/AddManagerForm";
 
 const Users: React.FC = () => {
   const { user } = useAuth();
@@ -40,7 +40,9 @@ const Users: React.FC = () => {
     type: "image"
   });
   const [isPreview, setIsPreview] = useState(false);
-   const [adminList, setAdminList] = useState([])
+   const [adminList, setAdminList] = useState([]);
+   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [managerRefresh, setManagerRefresh] = useState(false);
   const navigate = useNavigate();
    
   const filteredUsers = userList.filter(
@@ -217,6 +219,12 @@ const Users: React.FC = () => {
         <meta name="description" content="This is the home page of our app" />
       </Helmet>
     <div className="space-y-6">
+         <AddManagerForm
+                      isOpen={isFormOpen}
+                      onIsOpenChange={() => setIsFormOpen(false)}
+                      initialData={null}
+                      setManagerRefresh={setManagerRefresh}
+                  />
       <EmployeeFormDialog
         open={isDialogOpen}
         onClose={() => { setIsDialogOpen(false) }}
@@ -326,34 +334,8 @@ const Users: React.FC = () => {
           </div>
         </div>
       )}
-
-{/* Back Button */}
-<div className="md:mt-[-20px] md:mb-[-10px]">
-  <button
-    onClick={() => window.history.back()}
-    className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-  >
-    <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-  </button>
-</div>
-
-
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        
-        {/* Left side: Title + description */}
-        <div>
-          <h1 className="page-header flex items-center gap-2 text-2xl font-semibold">
-            <UsersIcon className="w-7 h-7 text-primary" />
-            {getPageTitle()}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {user?.role === 'super_admin'
-              ? 'Create and manage admin accounts'
-              : 'Create and manage employee accounts'}
-          </p>
-        </div>
-
+      <div className="flex items-center justify-end md:mt-[-14px]">
         {/* Right side: Add Employee button */}
         {
           user?.role === "super_admin" ?
@@ -422,6 +404,14 @@ const Users: React.FC = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuItem
+                      className="cursor-pointer"
+                      onClick={() => { setIsFormOpen(true);}}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Manager
+                    </DropdownMenuItem>
+
                     <DropdownMenuItem
                       className="cursor-pointer"
                       onClick={() => {
@@ -454,7 +444,7 @@ const Users: React.FC = () => {
                       className="cursor-pointer"
                       onClick={() => { setSelectedEmployeeId(userData?._id); handleGetPreview("join"); }}  >
                       <UserPlus className="w-4 h-4 mr-2" />
-                      Join
+                      Join Letter
                     </DropdownMenuItem>
 
                     <DropdownMenuItem

@@ -8,17 +8,19 @@ import { Loader2, X } from "lucide-react";
 import { getDepartments, getEmployees, addTaskManager, updateTaskManager } from "@/services/Service";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { createPortal } from "react-dom";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface ManagerFormProps {
     isOpen: boolean;
-    onClose: () => void;
+    onIsOpenChange: (open: boolean) => void;
     initialData?: any;
     setManagerRefresh?: (boolean) => void;
 }
 
 const AddManagerForm: React.FC<ManagerFormProps> = ({
     isOpen,
-    onClose,
+    onIsOpenChange,
     initialData,
     setManagerRefresh
 }) => {
@@ -46,7 +48,7 @@ const AddManagerForm: React.FC<ManagerFormProps> = ({
     useEffect(() => {
         console.log(initialData)
         if (!initialData) {
-           resetForm();
+            resetForm();
         } else {
             // Edit Mode: fill with initialData
             setDepartment(initialData.department || "none");
@@ -58,9 +60,9 @@ const AddManagerForm: React.FC<ManagerFormProps> = ({
     }, [initialData]);
 
     //====================================  Submit Forms=======================================================
-    const handleSubmit = async (e?: React.FormEvent) => {
-        e?.preventDefault();
-        if (!department || (filteredEmployees.length > 0 && !selectedEmployee) || !description) {
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!department || (filteredEmployees.length > 0 && !selectedEmployee)) {
             toast({
                 title: "Error",
                 description: "Please fill all required fields",
@@ -89,14 +91,14 @@ const AddManagerForm: React.FC<ManagerFormProps> = ({
             console.log(res)
             if (res.status === 200 || res.status === 201) {
                 toast({ title: `${initialData ? "Update Manager." : "Add Manager"}`, description: res.data.message });
-                onClose(); // close modal after success
+                onIsOpenChange(false); // close modal after success
                 setManagerRefresh(true);
             }
 
         } catch (err: any) {
             console.error("Error:", err);
             toast({
-                title: "Error",
+                title: "Error in Add Manager Form",
                 description: err?.response?.data?.message || "Something went wrong",
             });
         } finally {
@@ -152,25 +154,16 @@ const AddManagerForm: React.FC<ManagerFormProps> = ({
         handleGetEmployees();
     }, [isOpen]);
 
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-2">
-            <div className="relative bg-white rounded-md shadow-lg w-[92%] sm:w-full max-w-sm p-4 sm:p-5 max-h-[90vh] overflow-y-auto">
-
-                {/* Close Icon */}
-                <button onClick={()=>{onClose();resetForm()}} aria-label="Close" className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 transition">
-                    <X size={18} />
-                </button>
-                 <form onSubmit={handleSubmit}>
-                <h2 className="text-lg sm:text-xl font-semibold mb-3 pr-6">
-                    {initialData ? "Edit Manager" : "Add Manager"}
-                </h2>
-
-                <div className="space-y-3">
+    return <Dialog open={isOpen} onOpenChange={(open)=>{resetForm();onIsOpenChange(open)}}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>{initialData ? "Edit Manager" : "Add Manager"}</DialogTitle>
+                <DialogDescription>Manager Form</DialogDescription>
+            </DialogHeader>
+            <form id="create-more-manager-form" onSubmit={handleSubmit} className="space-y-3">
                     {/* Department */}
                     <div>
-                        <Label className="text-sm">Department</Label>
+                        <Label className="text-sm">Department*</Label>
                         <Select value={department} onValueChange={handleDepartmentChange}>
                             <SelectTrigger className="w-full truncate">
                                 <SelectValue placeholder="Select department" />
@@ -189,7 +182,7 @@ const AddManagerForm: React.FC<ManagerFormProps> = ({
                     {/* Employees - show only if filteredEmployees.length > 0 */}
                     {filteredEmployees.length > 0 && (
                         <div>
-                            <Label className="text-sm">Employee</Label>
+                            <Label className="text-sm">Employee*</Label>
                             <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
                                 <SelectTrigger className="w-full truncate">
                                     <SelectValue placeholder="Select employee" />
@@ -221,7 +214,7 @@ const AddManagerForm: React.FC<ManagerFormProps> = ({
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             rows={3}
-                            placeholder="Add description"
+                            placeholder="Add description(Optional)"
                         />
                     </div>
 
@@ -234,16 +227,17 @@ const AddManagerForm: React.FC<ManagerFormProps> = ({
                     {/* Buttons */}
                     <div className="flex gap-2 pt-2">
                         <Button
-                        type="button"
+                            type="button"
                             variant="secondary"
-                            onClick={()=>{onClose();resetForm()}}
+                            onClick={() => { onIsOpenChange(false); resetForm() }}
                             disabled={loading}
                             className="w-full"
                         >
                             Cancel
                         </Button>
                         <Button
-                            // onClick={handleSubmit}
+                            type="submit"
+                            form="create-more-manager-form"
                             disabled={
                                 loading ||
                                 (!department || department === "none") ||
@@ -256,11 +250,9 @@ const AddManagerForm: React.FC<ManagerFormProps> = ({
                             {initialData ? "Update" : "Save"}
                         </Button>
                     </div>
-                </div>
-                </form>
-            </div>
-        </div>
-    );
+            </form>
+        </DialogContent>
+    </Dialog>
 };
 
 export default AddManagerForm;

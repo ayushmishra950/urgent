@@ -403,7 +403,7 @@ import { SidebarProps, navItems, taskSubMenu, JobSubMenu } from "@/services/allF
 import { useAuth } from '@/contexts/AuthContext';
 import { createPortal } from 'react-dom';
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
+const Sidebar: React.FC<SidebarProps> = ({setTaskName, isOpen, onToggle, setActiveSidebar, setTaskSubPage }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -525,6 +525,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
               const renderItem = () => (
                 <NavLink
                   to={item.path}
+                  onClick={() => {setTaskName("");setActiveSidebar(item.label)}} // only on click
                   className={cn(
                     "sidebar-item flex items-center justify-between p-2",
                     isActive && "sidebar-item-active",
@@ -555,7 +556,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 return (
                   <li
                     key={item.path}
-
                     onMouseEnter={() => isOpen && setShowTaskSubMenu(true)}
                     onMouseLeave={() => setShowTaskSubMenu(false)}
                   >
@@ -573,6 +573,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                             <li key={sub.path}>
                               <NavLink
                                 to={sub.path}
+                                 onClick={()=> {setTaskName("Tasks");setTaskSubPage(sub?.label);}}
                                 end={sub.path === "/tasks"} // only for dashboard
                                 className={({ isActive }) => cn(
                                   "block px-4 py-2 text-sm text-white hover:bg-sidebar-accent",

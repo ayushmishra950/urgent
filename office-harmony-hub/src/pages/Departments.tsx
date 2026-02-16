@@ -154,28 +154,9 @@ const Departments: React.FC = () => {
         isDeleting={isDeleting}
         title="Delete Department?"
         message="This Action Will Permanently Delete This Department."
-      />
-    <div className="md:mt-[-20px] md:mb-[-10px]">
-      <button
-        onClick={() => window.history.back()}
-        className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-      >
-        <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-      </button>
-    </div>
-      
+      /> 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold">
-            <Briefcase className="w-7 h-7 text-primary" />
-            Departments
-          </h1>
-          <p className="text-muted-foreground">
-            Manage company departments and team structure
-          </p>
-        </div>
-
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end md:mt-[-15px] gap-4">
         {/* Right: Add Department Button */}
         <div className='flex items-right gap-3'>
         <Button

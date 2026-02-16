@@ -35,6 +35,7 @@ import CompaniesPage from "./job-portal/CompaniesPage";
 import JobsPage from "./job-portal/JobsPage";
 import RevenuePage from "./job-portal/RevenuePage";
 import SettingsPage from "./job-portal/SettingsPage";
+import { useState } from "react";
 
 // global.d.ts
 export {};
@@ -70,13 +71,13 @@ const AppRoutes = () => {
         <Route path="/companies" element={<Companies />} />
         <Route path="/departments" element={<Departments />} />
         {/* <Route path="/tasks" element={<Tasks />} /> */}
-        <Route path="/attendance" element={<Attendance />} />
-        <Route path="/leave" element={<Leave />} />
+        <Route path="/attendances" element={<Attendance />} />
+        <Route path="/leaves" element={<Leave />} />
         <Route path="/expenses" element={<Expenses />} />
-        <Route path="/payroll" element={<Payroll />} />
+        <Route path="/payrolls" element={<Payroll />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/reports" element={<Reports />} />
-        <Route path="/settings" element={<Settings />} />
+        <Route path="/setting" element={<Settings />} />
 
 
 

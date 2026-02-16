@@ -205,7 +205,6 @@ const SubTask: React.FC = () => {
       setIsDeleteDialogOpen(false);
     }
   };
-
   return (
     <>
       <SubTaskForm isOpen={isFormOpen} taskId={null} setSubTaskListRefresh={setSubTaskListRefresh} onClose={() => setIsFormOpen(false)} initialData={initialData} />
@@ -226,15 +225,7 @@ const SubTask: React.FC = () => {
       />
       <SubTaskDetailCard isOpen={isSubTaskDetailCardOpen} subTaskId={selectedSubTaskId} onClose={() => setIsSubTaskDetailCardOpen(false)} />
       <TaskStatusChangeModal name={name} task={selectedSubTask} isOpen={isTaskStatusChangeModalOpen} newStatus={newStatus} setNewStatus={setNewStatus} onConfirm={handleChangeStatus} onClose={() => setIsTaskStatusChangeModalOpen(false)} />
-      <div className="flex flex-col min-h-screen bg-gray-50/50 p-6 space-y-6">
-        <div className="md:mt-[-45px] md:mb-[-15px]">
-          <button
-            onClick={() => window.history.back()}
-            className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-          </button>
-        </div>
+      <div className="flex flex-col md:mt-[-30px] min-h-screen bg-gray-50/50 p-6 space-y-6">
         <Card>
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -246,7 +237,7 @@ const SubTask: React.FC = () => {
                       {projectName} &gt; {taskName}
                     </h1>
                     <h2 className="text-xl font-semibold text-gray-700 truncate">
-                      Sub-Task List
+                      Sub-Task List ({filteredSubTasks?.length})
                     </h2>
                   </>
                 ) : (
@@ -254,9 +245,9 @@ const SubTask: React.FC = () => {
                     <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">
                       Sub-Task List
                     </h2>
-                    <p className="text-gray-500 text-sm mt-1">
+                    {/* <p className="text-gray-500 text-sm mt-1">
                       Manage individual sub-tasks, track parent task association, and monitor completion status.
-                    </p>
+                    </p> */}
                   </>
                 )}
               </div>

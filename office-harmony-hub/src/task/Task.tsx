@@ -240,17 +240,7 @@ const Task: React.FC = () => {
       ) : null}
 
 
-      <div className="flex flex-col min-h-screen bg-gray-50/50 p-3 sm:p-6 space-y-6 max-w-[100vw] sm:max-w-none">
-        <div className="md:mt-[-45px] md:mb-[-15px]">
-          <button
-            onClick={() => window.history.back()}
-            className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-          </button>
-        </div>
-        {/* Header */}
-
+      <div className="flex flex-col md:mt-[-30px] min-h-screen bg-gray-50/50 p-3 sm:p-6 space-y-6 max-w-[100vw] sm:max-w-none">
         <Card>
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 w-full">
@@ -264,7 +254,7 @@ const Task: React.FC = () => {
                 )}
                 <h2 className={`text-xl font-semibold text-gray-700 truncate ${projectName ? "sm:ml-3" : ""
                   }`}>
-                  Task List
+                  Task List ({filteredTasks?.length})
                 </h2>
               </div>
 

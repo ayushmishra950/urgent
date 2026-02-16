@@ -15,6 +15,13 @@ const Dashboard: React.FC = () => {
   const { toast } = useToast();
   const [dashboardData, setDashboardData] = useState(null);
   const navigate = useNavigate();
+  // Define sidebar width (can match your sidebar open/close widths)
+const sidebarOpenWidth = 256; // px, 16rem
+const sidebarClosedWidth = 64; // px, 4rem
+
+// Suppose you know sidebar state from a parent or context
+const sidebarOpen = window.innerWidth > 1024 ? true : false; // simple default
+
 
   const getRoleTitle = () => {
     switch (user?.role) {
@@ -80,15 +87,10 @@ const Dashboard: React.FC = () => {
       </Helmet>
 
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="page-header">{getRoleTitle()}</h1>
-          <p className="text-muted-foreground">Welcome back, {user?.name}! Here's what's happening today.</p>
-        </div>
          {(user?.role === "super_admin") && (<CompanyList />)}
          { user?.role !== 'super_admin' &&  <>
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 py-2">
           
           {(user?.role === 'admin') && (
             <>

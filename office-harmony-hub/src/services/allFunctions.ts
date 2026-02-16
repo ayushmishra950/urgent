@@ -151,6 +151,10 @@ export const months = [
 export interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
+  setActiveSidebar: React.Dispatch<React.SetStateAction<string>>;
+  setTaskSubPage: React.Dispatch<React.SetStateAction<string>>;
+  setTaskName: React.Dispatch<React.SetStateAction<string>>;
+
 }
 export interface NavItem {
   icon: React.ElementType;
@@ -163,16 +167,15 @@ export const navItems: NavItem[] = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', roles: ['super_admin', 'admin', 'employee'] },
   { icon: Building2, label: 'Companies', path: '/companies', roles: ['super_admin'] },
   { icon: FolderKanban, label: 'Tasks', path: '/tasks', roles: ['admin', 'employee'] },
-  { icon: Clock, label: 'Attendance', path: '/attendance', roles: ['admin', 'employee'] },
-  { icon: CalendarDays, label: 'Leave', path: '/leave', roles: ['admin', 'employee'] },
+  { icon: Clock, label: 'Attendance', path: '/attendances', roles: ['admin', 'employee'] },
+  { icon: CalendarDays, label: 'Leave', path: '/leaves', roles: ['admin', 'employee'] },
    { icon: Briefcase, label: 'Departments', path: '/departments', roles: ['admin'] },
   { icon: Users, label: 'Employees', path: '/users', roles: ['super_admin', 'admin'] },
   { icon: Receipt, label: 'Expenses', path: '/expenses', roles: ['admin'] },
-  { icon: Wallet, label: 'Payroll', path: '/payroll', roles: ['admin', 'employee'] },
-  // { icon: Bell, label: 'Notifications', path: '/notifications', roles: ['super_admin', 'admin', 'employee'] },
+  { icon: Wallet, label: 'Payroll', path: '/payrolls', roles: ['admin', 'employee'] },
   { icon: Bell, label: 'Job-Portal', path: '/jobs', roles: ['super_admin', 'admin'] },
   { icon: BarChart3, label: 'Reports', path: '/reports', roles: ['admin'] },
-  { icon: Settings, label: 'Settings', path: '/settings', roles: ['super_admin', 'admin', 'employee'] },
+  { icon: Settings, label: 'Setting', path: '/setting', roles: ['super_admin', 'admin', 'employee'] },
 ];
 
 /** Task Submenu (Admin/Super Admin Only) */
@@ -227,3 +230,55 @@ export const JobSubMenu = [
 
     return summary;
   };
+
+
+export const headingManage = (value: string, role: string, subPage?: string, taskName?:string) => {
+  // Tasks ke liye subPage ko use karenge
+  if (taskName === "Tasks" && subPage) {
+    switch(subPage) {
+      case "Dashboard": 
+        return { title: "Dashboard", description: "Overview of your Projects and Tasks.", icon: "LayoutDashboard" };
+      case "Projects": 
+        return { title: "Projects", description: "Manage and track your ongoing projects.", icon: "Folder" };
+      case "Tasks": 
+        return { title: "Tasks", description: "Manage and track your ongoing Tasks.", icon: "CheckSquare" };
+      case "Sub Tasks": 
+        return { title: "Sub Tasks", description: "Manage and track your ongoing SubTasks.", icon: "Layers" };
+      case "Overdue Tasks": 
+        return { title: "Overdue Tasks", description: "Manage and track your ongoing Overdue Tasks.", icon: "AlertCircle" };
+      case "Task Manager": 
+        return { title: "Task Manager", description: "Manage and track your ongoing Department Managers.", icon: "Users" };
+      default:
+        return { title: "Dashboard", description: "Overview of your Projects and Tasks.", icon: "LayoutDashboard" };
+    }
+  }
+
+  // Baaki values ke liye
+  switch(value) {
+    case "Dashboard": 
+      return { title: "Admin Dashboard", description: "Welcome back! Here's what's happening today.", icon: "LayoutDashboard" };
+    case "Attendance": 
+      return { title: "Attendance", description: role==="admin" ? "Overview of all employees' attendance." : "Your daily attendance record.", icon: "Clock" };
+    case "Leave": 
+      return { title: "Leave Management", description: role==="admin" ? "Manage employee leave requests & types." : "Apply for leave and track your requests", icon: "CalendarDays" };
+    case "Departments": 
+      return { title: "Departments", description: "Manage company departments and team structure.", icon: "Briefcase" };
+    case "Employees": 
+      return { title: role==="super_admin" ? "Manage Admins" : "Manage Employees", description: role==="super_admin" ? "Create and manage admin accounts." : "Create and manage employee accounts.", icon: "UsersIcon" };
+    case "Expenses": 
+      return { title: "Expense", description: "View and manage your own expenses.", icon: "LayoutDashboard" };
+    case "Payroll": 
+      return { title: "Payroll Management", description: "Manage employee salaries and generate payslips.", icon: "Wallet" };
+    case "Job-Portal": 
+      return { title: "Job-Portal", description: "", icon: "LayoutDashboard" };
+    case "Reports": 
+      return { title: "Reports & Analytics", description: "Comprehensive insights into your organization's performance.", icon: "BarChart3" };
+    case "Setting": 
+      return { title: "Setting", description: "Manage your account settings and preferences.", icon: "SettingsIcon" };
+    case "Company": 
+      return { title: "Company", description: "", icon: "LayoutDashboard" };
+    default: 
+      return { title: "Admin Dashboard", description: "Welcome back! Here's what's happening today.", icon: "LayoutDashboard" };
+  }
+};
+

@@ -176,6 +176,7 @@ const OverdueTask: React.FC = () => {
         onClose={() => setIsFormOpen(false)}
         initialData={initialData}
         setTaskListRefresh={setTaskListRefresh}
+        projectId=""
       />
       <ReassignForm
         isOpen={reasignForm}
@@ -199,28 +200,10 @@ const OverdueTask: React.FC = () => {
   <SubTaskDetailCard isOpen={taskCard} subTaskId={selectedTaskId} onClose={() => setTaskCard(false)} />
 ) : null}
 
-      <div className="flex flex-col min-h-screen bg-gray-50/50 p-6 space-y-6">
-      <div className="md:mt-[-45px] md:mb-[-15px]">
-        <button
-          onClick={() => window.history.back()}
-          className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-        </button>
-      </div>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 flex items-center gap-2">
-              <AlertCircle className="text-red-600 h-8 w-8" />
-              Overdue Tasks
-            </h2>
-            <p className="text-muted-foreground">Action required: Tasks that have passed their due date.</p>
-          </div>
-        </div>
-
+      <div className="flex flex-col min-h-screen bg-gray-50/50 p-6 space-y-6 md:mt-[-26px]">
         <Card className="border-red-100 shadow-sm">
           <CardHeader>
-            <CardTitle>Overdue Items</CardTitle>
+            <CardTitle>Overdue Items ({filteredTasks?.length})</CardTitle>
             <CardDescription>
               Prioritize these tasks to get back on track.
             </CardDescription>

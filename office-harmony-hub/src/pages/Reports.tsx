@@ -65,25 +65,9 @@ const departmentPerformance = analyticsData?.departmentAnalytics?.map((v)=>{
         <title>Report Page</title>
         <meta name="description" content="This is the home page of our app" />
       </Helmet>
-      <div className="md:mt-[-20px] md:mb-[5px]">
-        <button
-          onClick={() => window.history.back()}
-          className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-        </button>
-      </div>
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="page-header flex items-center gap-2">
-            <BarChart3 className="w-7 h-7 text-primary" />
-            Reports & Analytics
-          </h1>
-          <p className="text-muted-foreground">Comprehensive insights into your organization's performance</p>
-        </div>
-
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 md:mt-[-35px]">
         <div className="flex gap-3">
           {/* <Select defaultValue="this-month">
             <SelectTrigger className="w-40">

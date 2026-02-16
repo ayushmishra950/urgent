@@ -140,7 +140,7 @@ const CompanyCard: React.FC<{ company: Company }> = ({ company }) => {
   const { name, logo,isActive,createdAt, totalEmployees,website, totalProjects, address,adminNames, industry, contactNumber } = company;
 
   return (
-  <div className="relative w-full bg-white dark:bg-gray-800 shadow-md rounded-xl p-4 hover:shadow-xl transition-shadow h-[310px]">
+  <div className="relative w-full bg-white dark:bg-gray-800 shadow-md rounded-xl p-4 hover:shadow-xl transition-shadow max-h-[350px] overflow-y-auto">
 
     {/* 🔹 Status Badge (Top Right) */}
     <div className="absolute top-4 right-4">
@@ -214,6 +214,7 @@ const CompanyCard: React.FC<{ company: Company }> = ({ company }) => {
 );
 
 };
+
 
 const CompanyList: React.FC = () => {
   const { user } = useAuth();

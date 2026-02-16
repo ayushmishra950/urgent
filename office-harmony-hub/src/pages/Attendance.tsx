@@ -158,28 +158,10 @@ const attendanceUIState = useMemo(() => {
       onClose={()=>{setAttendanceForm(false)}}
       setAttendanceRefresh={setAttendanceRefresh}
       />
-      <div className="md:mt-[-20px] md:mb-[-10px]">
-        <button
-          onClick={() => window.history.back()}
-          className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-        </button>
-      </div>
     <div className="space-y-6 p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-3xl font-bold flex items-center gap-3">
-          <Clock className="w-8 h-8 text-primary" />
-          Attendance
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          {user?.role === "admin"
-            ? "Overview of all employees' attendance"
-            : "Your daily attendance record"}
-        </p>
-      </div>
+      <div className="flex justify-end md:mt-[-40px]">
+    
        {user?.role === "admin" && <Button size="sm" onClick={()=>{setAttendanceForm(true)}}>Update Attendance</Button>}
       </div>
 

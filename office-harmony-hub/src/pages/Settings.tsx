@@ -144,25 +144,7 @@ const Settings: React.FC = () => {
         <title>Setting Page</title>
         <meta name="description" content="This is the home page of our app" />
       </Helmet>
-     <div className="md:mt-[-20px] md:mb-[5px]">
-       <button
-         onClick={() => window.history.back()}
-         className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-       >
-         <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-       </button>
-     </div>
-
-    <div className="space-y-6 max-w-4xl md:ml-28">
-      {/* Header */}
-      <div>
-        <h1 className="page-header flex items-center gap-2">
-          <SettingsIcon className="w-7 h-7 text-primary" />
-          Settings
-        </h1>
-        <p className="text-muted-foreground">Manage your account settings and preferences</p>
-      </div>
-
+    <div className="space-y-6 max-w-4xl md:ml-28">     
       {/* Profile Settings */}
       <Card>
         <CardHeader>

@@ -38,28 +38,10 @@ const TaskDashboard: React.FC = () => {
         <title>Task Page</title>
         <meta name="description" content="This is the home page of our app" />
       </Helmet>
-      <div className="md:mt-[-20px] md:mb-[-1px]">
-        <button
-          onClick={() => window.history.back()}
-          className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-        </button>
-      </div>
+     
     <div className="flex flex-col min-h-screen bg-gray-50/50 p-6 space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard</h2>
-          <p className="text-muted-foreground">Overview of your {user?.role==="admin"?"Projects and Tasks.":user?.taskRole==="manager"?"Tasks and SubTasks":"Tasks"}</p>
-        </div>
-        {/* <div className="flex items-center space-x-2">
-          <Button>Download Report</Button>
-        </div> */}
-      </div>
-
       {/* Summary Cards */}
-      <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${user?.role === "admin" ? "lg:grid-cols-5" : "lg:grid-cols-4"
+      <div className={`grid grid-cols-1 md:mt-[-30px] gap-4 sm:grid-cols-2 ${user?.role === "admin" ? "lg:grid-cols-5" : "lg:grid-cols-4"
         }`}>
         {user?.role === "admin" ? <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

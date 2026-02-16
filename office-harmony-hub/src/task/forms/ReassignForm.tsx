@@ -153,9 +153,9 @@ useEffect(() => {
               <SelectContent className="w-full max-h-48 overflow-auto">
                 {managers?.map(emp => (
                   <SelectItem key={emp._id} value={emp._id} 
-                  disabled={emp._id === employeeId}
+                  disabled={emp._id === employeeId || (reassignName === "Employee" && emp?.taskRole === "manager")}
                   >
-                    {emp?.fullName} ({emp?.department})
+                    {emp?.fullName} ({emp?.department}) {reassignName==="Employee" && (emp?.taskRole === "manager"? "(Manager)" : "")}
                   </SelectItem>
                 ))}
               </SelectContent>

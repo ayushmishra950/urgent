@@ -1167,6 +1167,17 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
   const panRef = useRef<HTMLInputElement>(null);
   const bankRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef(null);
+  const formRef = useRef(null);
+    const [showArrow, setShowArrow] = useState(true);
+  
+    const handleScroll = () => {
+      const el = formRef.current;
+  
+      const isBottom =
+        el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+  
+      setShowArrow(!isBottom);
+    };
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -1418,7 +1429,8 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
           <form onSubmit={handleSave} className="flex flex-col max-h-[92vh] h-full relative">
             {/* Scrollable area */}
             <div
-              ref={scrollContainerRef}
+              ref={formRef}
+              onScroll={handleScroll}
               className="flex-1 overflow-y-auto scrollbar-hide px-4 py-5 sm:px-6 sm:py-6 relative"
               style={{ paddingBottom: formStep === 2 ? "10px" : "24px" }}
             >
@@ -1601,7 +1613,6 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
                       <Input
                         type="date"
                         ref={dateRef}
-                        min={today}
                         disabled={isEditMode}
                         value={formatDateFromInput(currentEmployee?.joinDate) || ""}
                         onChange={(e) => setCurrentEmployee({ ...currentEmployee, joinDate: e.target.value })}
@@ -1614,10 +1625,10 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
                         }}
                       />
                     </div>
-
+                 
                     {/* Profile Image */}
                     <div className="space-y-1.5">
-                      <Label className="text-sm font-medium">Profile Image *</Label>
+                      <Label className="text-sm font-medium">Profile Image </Label>
                       <Input
                         type="file"
                         accept="image/*"
@@ -1643,6 +1654,12 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
                       )}
                     </div>
                   </div>
+                      {showArrow && <div className="relative w-full top-[-60px]">
+                                    <span className="pointer-events-none absolute top-20 left-1/2 -translate-x-1/2 flex justify-center">
+                                      <ChevronDown className="w-5 h-5 text-gray-400 animate-bounce" />
+                                    </span>
+                                  </div>}
+
 
 
                   <div className="flex justify-end gap-3 pt-5 border-t mt-4">
@@ -1693,7 +1710,7 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
 
                   {/* Role & Responsibilities */}
                   <div className="space-y-1.5">
-                    <Label className="text-sm font-medium">Role & Responsibilities *</Label>
+                    <Label className="text-sm font-medium">Role & Responsibilities </Label>
                     <textarea
                       rows={3}
                       className="w-full border rounded-md p-2.5 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -1758,7 +1775,7 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
 
                   {/* Remark */}
                   <div className="space-y-1.5">
-                    <Label className="text-sm font-medium">Remark *</Label>
+                    <Label className="text-sm font-medium">Remark </Label>
                     <textarea
                       rows={3}
                       className="w-full border rounded-md p-2.5 text-sm resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -1767,6 +1784,11 @@ export const EmployeeFormDialog: React.FC<EmployeeFormDialogProps> = ({
                       placeholder="Describe key responsibilities, if any (Optional)"
                     />
                   </div>
+                   {showArrow && <div className="relative w-full top-[-350px]">
+                                    <span className="pointer-events-none absolute top-20 left-1/2 -translate-x-1/2 flex justify-center">
+                                      <ChevronDown className="w-5 h-5 text-gray-400 animate-bounce" />
+                                    </span>
+                                  </div>}
 
                   <div className="flex justify-between pt-5 border-t mt-4 sticky bottom-0 bg-background z-20">
                     <Button type="button" variant="outline" size="sm" onClick={() => setFormStep(1)}>

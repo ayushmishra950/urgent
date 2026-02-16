@@ -26,7 +26,7 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
   useEffect(() => {
     if (!user) return;
 
-    const socketClient: Socket = io("http://localhost:5000");
+    const socketClient: Socket = io(import.meta.env.VITE_API_URL);
     setSocket(socketClient);
 
     // Join user-specific room

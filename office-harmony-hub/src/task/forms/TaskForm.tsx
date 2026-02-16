@@ -494,7 +494,8 @@ import { getProject, getTaskManager, addTask, updateTask } from "@/services/Serv
 import { formatDateFromInput } from "@/services/allFunctions";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import ProjectForm from "./ProjectForm";
-import {TaskFormData, TaskFormModalProps} from "@/types";
+import AddManagerForm from "./AddManagerForm";
+import { TaskFormData, TaskFormModalProps } from "@/types";
 
 const TaskForm: React.FC<TaskFormModalProps> = ({
   isOpen,
@@ -516,9 +517,23 @@ const TaskForm: React.FC<TaskFormModalProps> = ({
   const [pendingPayload, setPendingPayload] = useState<any>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [projectListRefresh, setProjectListRefresh] = useState(false);
+  const [projectDates, setProjectDates] = useState<{ startDate?: string; endDate?: string }>({});
+  const [isManagerFormOpen, setIsManagerFormOpen] = useState(false);
+  const [managerRefresh, setManagerRefresh] = useState(false);
+  const formRef = useRef(null);
+  const [showArrow, setShowArrow] = useState(true);
+  const startDateRef = useRef(null);
+  const endDateRef = useRef(null);
 
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [showScrollArrow, setShowScrollArrow] = useState(false);
+  const handleScroll = () => {
+    const el = formRef.current;
+
+    const isBottom =
+      el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+
+    setShowArrow(!isBottom);
+  };
+
 
   useEffect(() => {
     if (isOpen || initialData || projectId) {
@@ -538,23 +553,6 @@ const TaskForm: React.FC<TaskFormModalProps> = ({
     }
   }, [isOpen, initialData, projectId]);
 
-  const checkScrollable = () => {
-    if (!scrollRef.current) return;
-    const { scrollHeight, clientHeight } = scrollRef.current;
-    setShowScrollArrow(scrollHeight > clientHeight + 5);
-  };
-
-  useEffect(() => {
-    if (!isOpen) return;
-    checkScrollable();
-    const timer = setTimeout(checkScrollable, 400);
-    const ro = new ResizeObserver(checkScrollable);
-    if (scrollRef.current) ro.observe(scrollRef.current);
-    return () => {
-      clearTimeout(timer);
-      ro.disconnect();
-    };
-  }, [isOpen, taskForm, projects, managers, isFormOpen]);
 
   const handleSubmit = async (e?: React.FormEvent, forceCreate = false) => {
     e?.preventDefault();
@@ -605,7 +603,7 @@ const TaskForm: React.FC<TaskFormModalProps> = ({
       }
     } catch (err: any) {
       toast({
-        title: "Error",
+        title: "Error in Manage Task",
         description: err?.response?.data?.message || "Something went wrong",
         variant: "destructive",
       });
@@ -638,7 +636,7 @@ const TaskForm: React.FC<TaskFormModalProps> = ({
       handleGetManager();
       handleGetProject();
     }
-  }, [projectListRefresh, user]);
+  }, [projectListRefresh, user, managerRefresh]);
 
   return (
     <>
@@ -672,8 +670,9 @@ const TaskForm: React.FC<TaskFormModalProps> = ({
       </AlertDialog>
 
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[580px] w-[92vw] max-h-[94vh] p-0 gap-0 rounded-lg overflow-hidden">
-          <form onSubmit={handleSubmit} className="flex flex-col h-full">
+        <DialogContent ref={formRef}
+          onScroll={handleScroll} className={`sm:max-w-[580px] w-[92vw] max-h-[94vh] p-0 gap-0 rounded-lg overflow-y-auto no-scrollbar`}>
+          <form id="manage-task-form" onSubmit={handleSubmit} className="flex flex-col h-full">
             <DialogHeader className="px-5 pt-2 pb-1 border-b shrink-0">
               <DialogTitle className="text-lg font-semibold">
                 {isEdit ? "Edit Task" : "Create New Task"}
@@ -681,16 +680,26 @@ const TaskForm: React.FC<TaskFormModalProps> = ({
             </DialogHeader>
 
             <div
-              ref={scrollRef}
               className="flex-1 overflow-y-auto px-5 py-4 space-y-4 text-sm"
             >
               {/* Project & Task Name */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
                 <div className="grid gap-1.5">
                   <Label htmlFor="project" className="text-sm font-medium">Project</Label>
                   <Select
                     value={taskForm.projectId?.toString() || ""}
-                    onValueChange={(value) => setTaskForm({ ...taskForm, projectId: value })}
+                    // onValueChange={(value) => setTaskForm({ ...taskForm, projectId: value })}
+                    onValueChange={(value) => {
+                      const selectedProject = projects.find(p => p._id === value);
+                      setTaskForm({ ...taskForm, projectId: value });
+                      // Store project dates separately (optional, for min/max logic)
+                      setProjectDates({
+                        startDate: formatDateFromInput(selectedProject?.startDate),
+                        endDate: formatDateFromInput(selectedProject?.endDate),
+                      });
+                    }}
+
                     disabled={projects.length === 0}
                   >
                     <SelectTrigger id="project" className="h-9 text-sm">
@@ -702,29 +711,29 @@ const TaskForm: React.FC<TaskFormModalProps> = ({
                           {p.name}
                         </SelectItem>
                       ))}
-                    {user?.role === "admin" && <>  <div className="border-t my-1" />
-                      <button
-                        type="button"
-                        onClick={() => setIsFormOpen(true)}
-                        className="w-full text-left px-2 py-1.5 text-sm text-primary hover:bg-muted rounded-sm"
-                      >
-                        + Add New Project
-                      </button>
+                      {user?.role === "admin" && <>  <div className="border-t my-1" />
+                        <button
+                          type="button"
+                          onClick={() => setIsFormOpen(true)}
+                          className="w-full text-left px-2 py-1.5 text-sm text-primary hover:bg-muted rounded-sm"
+                        >
+                          + Add New Project
+                        </button>
                       </>}
                     </SelectContent>
                   </Select>
 
-                  {projects.length === 0 && user?.role === "admin" && (
+                  {projects.length === 0 && (
                     <div className="flex items-center justify-between text-xs text-red-500 mt-1">
-                      <span>Please add a project first</span>
-                      <Button
+                      <span>Please add a project first. {user?.role !== "admin" && "Please Contact to Admin."}</span>
+                      {user?.role === "admin" && <Button
                         type="button"
                         size="sm"
                         onClick={() => setIsFormOpen(true)}
                         className="h-7 px-3 text-xs"
                       >
                         + Add Project
-                      </Button>
+                      </Button>}
                     </div>
                   )}
                 </div>
@@ -760,7 +769,10 @@ const TaskForm: React.FC<TaskFormModalProps> = ({
                   <Input
                     id="startDate"
                     type="date"
-                    min={isEdit && !startDateTouched ? undefined : today}
+                    ref={startDateRef}
+                   onClick={()=>{if(startDateRef.current?.showPicker){startDateRef.current.showPicker()}}}                 
+                    min={projectDates.startDate} // project start date ya today
+                    max={projectDates.endDate}            // project end date
                     value={taskForm.startDate || ""}
                     onChange={(e) => {
                       setStartDateTouched(true);
@@ -782,7 +794,10 @@ const TaskForm: React.FC<TaskFormModalProps> = ({
                   <Input
                     id="endDate"
                     type="date"
-                    min={taskForm.startDate || today}
+                    ref={endDateRef}
+                   onClick={()=>{if(endDateRef.current?.showPicker){endDateRef.current.showPicker()}}}              
+                    min={taskForm.startDate || projectDates.startDate}
+                    max={projectDates.endDate}
                     disabled={!taskForm.startDate}
                     value={taskForm.endDate || ""}
                     onChange={(e) => setTaskForm({ ...taskForm, endDate: e.target.value })}
@@ -798,22 +813,41 @@ const TaskForm: React.FC<TaskFormModalProps> = ({
 
               {/* Manager & Priority */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="grid gap-1.5">
-                  <Label htmlFor="manager" className="text-sm font-medium">Manager</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="manager" className="text-sm font-medium">
+                    Manager *
+                  </Label>
+
                   <Select
                     value={taskForm.manager || ""}
                     onValueChange={(value) => setTaskForm({ ...taskForm, manager: value })}
+                    disabled={managers.length === 0}
                   >
                     <SelectTrigger className="h-9 text-sm">
                       <SelectValue placeholder="Select Manager" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {managers.map((m) => (
-                        <SelectItem key={m._id} value={m._id}>
-                          {m.fullName} ({m.department})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
+
+                    {/* Agar managers list me data ho */}
+                    {managers.length > 0 && (
+                      <>
+                        <SelectContent className="max-h-48 overflow-y-auto">
+                          {managers.map((m) => (
+                            <SelectItem key={m._id} value={m._id}>
+                              {m.fullName} ({m.department})
+                            </SelectItem>
+                          ))}
+
+                          {/* Add More button outside SelectContent */}
+                          {user?.role === "admin" && (
+                            <Button type="button" onClick={()=>setIsManagerFormOpen(true)} variant="ghost" size='sm' className="w-full">
+                                            + Add More Manager
+                                        </Button>
+                            
+                          )}
+                        </SelectContent>
+                      </>
+                    )}
+
                   </Select>
                 </div>
 
@@ -823,7 +857,7 @@ const TaskForm: React.FC<TaskFormModalProps> = ({
                     value={taskForm.priority || ""}
                     onValueChange={(value) => setTaskForm({ ...taskForm, priority: value as Priority })}
                   >
-                    <SelectTrigger className="h-9 text-sm">
+                    <SelectTrigger className="h-9 text-sm md:mb-8">
                       <SelectValue placeholder="Select Priority" />
                     </SelectTrigger>
                     <SelectContent>
@@ -835,6 +869,11 @@ const TaskForm: React.FC<TaskFormModalProps> = ({
                   </Select>
                 </div>
               </div>
+              {showArrow && <div className="relative w-full">
+                <span className="pointer-events-none absolute top-20 left-1/2 -translate-x-1/2 flex justify-center">
+                  <ChevronDown className="w-5 h-5 text-gray-400 animate-bounce" />
+                </span>
+              </div>}
 
               {/* Remarks */}
               <div className="grid gap-1.5">
@@ -848,6 +887,7 @@ const TaskForm: React.FC<TaskFormModalProps> = ({
                 />
               </div>
             </div>
+
 
             {/* Footer + indicator */}
             <div className="relative shrink-0 border-t bg-background">
@@ -872,25 +912,21 @@ const TaskForm: React.FC<TaskFormModalProps> = ({
                     !taskForm.manager ||
                     !taskForm.projectId
                   }
+                  form="manage-task-form"
                   className="h-9 text-sm w-full sm:w-auto"
                 >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {isEdit ? "Update Task" : "Create Task"}
                 </Button>
               </DialogFooter>
-
-              {showScrollArrow && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 pointer-events-none">
-                  <div className="flex flex-col items-center text-muted-foreground animate-bounce">
-                    <ChevronDown className="h-6 w-6 opacity-70" />
-                    <span className="text-xs opacity-60 mt-0.5">scroll for more</span>
-                  </div>
-                </div>
-              )}
             </div>
           </form>
         </DialogContent>
       </Dialog>
+      <AddManagerForm isOpen={isManagerFormOpen}
+                              onIsOpenChange={setIsManagerFormOpen}
+                              initialData={null}
+                              setManagerRefresh={setManagerRefresh} />
     </>
   );
 };

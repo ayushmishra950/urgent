@@ -49,7 +49,7 @@ const TaskManager: React.FC = () => {
     const handleConfirmDelete = async () => {
         setIsDeleting(true);
         try {
-            const res = await deleteTaskManager(user?._id, user?.companyId?._id,selectedManagerId);
+            const res = await deleteTaskManager(user?._id, user?.companyId?._id, selectedManagerId);
             if (res.status === 200) {
                 setManagerRefresh(true);
                 toast({
@@ -92,7 +92,7 @@ const TaskManager: React.FC = () => {
         <>
             <AddManagerForm
                 isOpen={isFormOpen}
-                onClose={() => setIsFormOpen(false)}
+                onIsOpenChange={() => setIsFormOpen(false)}
                 initialData={initialData}
                 setManagerRefresh={setManagerRefresh}
             />
@@ -105,36 +105,23 @@ const TaskManager: React.FC = () => {
                 message="Are you sure you want to remove this manager?"
             />
 
-            <div className="flex flex-col min-h-screen bg-gray-50/50 p-3 sm:p-6 space-y-6 max-w-[100vw] sm:max-w-none">
-            <div className="md:mt-[-45px] md:mb-[-15px]">
-              <button
-                onClick={() => window.history.back()}
-                className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-              </button>
-            </div>
+            <div className="flex flex-col md:mt-[-30px] min-h-screen bg-gray-50/50 p-3 sm:p-6 space-y-6 max-w-[100vw] sm:max-w-none">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
-                            Managers
-                        </h2>
-                        <p className="text-muted-foreground text-sm sm:text-base">
-                            Manage your organization’s managers.
-                        </p>
-                    </div>
-                    <Button
-                        className="w-full sm:w-auto"
-                        onClick={() => { setInitialData(null); setIsFormOpen(true); }}
-                    >
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Manager
-                    </Button>
-                </div>
                 <Card>
                     <CardHeader>
-                        <CardTitle>Manager List</CardTitle>
+                        <CardTitle>
+                            <div className="flex flex-row items-center justify-between">
+                                <span>Manager List</span>
+                                <Button
+                                    className="w-full sm:w-auto"
+                                    onClick={() => { setInitialData(null); setIsFormOpen(true); }}
+                                >
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add Manager
+                                </Button>
+                            </div>
+
+                        </CardTitle>
                         <CardDescription>
                             All managers with contact information and departments.
                         </CardDescription>

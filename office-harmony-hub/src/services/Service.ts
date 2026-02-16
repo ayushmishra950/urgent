@@ -539,7 +539,7 @@ export const getDepartments = async (id) => {
 
 
 export const updateDepartment = async (id, obj) => {
-  const res = await axios.patch(
+  const res = await axios.put(
     `${import.meta.env.VITE_API_URL}/api/departments/updateDepartment/${id}`, obj
   );
 

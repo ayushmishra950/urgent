@@ -87,25 +87,6 @@ const Project: React.FC = () => {
       handleGetEmployees();
     }, [])
 
-     const handleOpenProjectForm = () => {
-  // 1️⃣ No employees
-  if (!employeeList || employeeList.length === 0) {
-    return toast({ title: "No Employees Found", description: "Please add at least one employee before creating a project.", variant: "destructive" });
-  }
-
-  // 2️⃣ Check if at least one manager exists
-  const hasManager = employeeList.some(
-    (emp) => emp?.taskRole && emp.taskRole !== "none"
-  );
-  if (!hasManager) {
-    return toast({ title: "Manager Required", description: "Please assign at least one employee as a manager before creating a project.", variant: "destructive" });
-  }
-  // 3️⃣ All good
-  setInitialData(null);
-  setIsFormOpen(true);
-};
-
-
   const handleChangeStatus = async () => {
     let obj = { adminId: user?._id, companyId: user?.companyId?._id, projectId: selectedProject?._id, status: newStatus }
     try {
@@ -198,37 +179,23 @@ const Project: React.FC = () => {
       <ProjectForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} initialData={initialData} setProjectListRefresh={setProjectListRefresh} />
       <ProjectDetailCard isOpen={isProjectDetailOpen} onClose={() => setIsProjectDetailOpen(false)} projectId={selectedProjectId} />
       <TaskStatusChangeModal name={name} task={selectedProject} isOpen={isTaskStatusChangeModalOpen} newStatus={newStatus} setNewStatus={setNewStatus} onConfirm={handleChangeStatus} onClose={() => setIsTaskStatusChangeModalOpen(false)} />
-      <div className="flex flex-col min-h-screen bg-gray-50/50 p-3 sm:p-6 space-y-6 max-w-[100vw] sm:max-w-none">
-        <div className="md:mt-[-45px] md:mb-[-15px]">
-          <button
-            onClick={() => window.history.back()}
-            className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-          </button>
-        </div>
+      <div className="flex flex-col md:mt-[-34px] min-h-screen bg-gray-50/50 p-3 sm:p-6 space-y-6 max-w-[100vw] sm:max-w-none">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
-              Projects
-            </h2>
-            <p className="text-muted-foreground text-sm sm:text-base">
-              Manage and track your ongoing projects.
-            </p>
-          </div>
-          <Button
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <div className="flex flex-row items-center justify-between">
+                 <span>  Project List ({filteredProjects?.length})</span>
+                  <Button
             className="w-full sm:w-auto"
-            onClick={handleOpenProjectForm}
+            onClick={()=>{ setInitialData(null); setIsFormOpen(true);}}
           >
             <Plus className="mr-2 h-4 w-4" />
             Create Project
           </Button>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Project List</CardTitle>
+              </div>
+            
+              </CardTitle>
             <CardDescription>
               All projects with status and due dates.
             </CardDescription>

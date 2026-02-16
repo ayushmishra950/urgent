@@ -325,6 +325,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
   const [startDateTouched, setStartDateTouched] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showScrollArrow, setShowScrollArrow] = useState(false);
+  const startDateRef = useRef(null);
+  const endDateRef = useRef(null);
 
   const isEdit = Boolean(initialData);
   const today = new Date().toISOString().split('T')[0];
@@ -464,6 +466,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 <Input
                   id="startDate"
                   type="date"
+                  ref={startDateRef}
+                  onClick={()=>{if(startDateRef.current?.showPicker){startDateRef.current.showPicker()}}}
                   min={isEdit && !startDateTouched ? undefined : today}
                   value={formData.startDate || ''}
                   onChange={(e) => {
@@ -490,6 +494,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 <Input
                   id="endDate"
                   type="date"
+                  ref={endDateRef}
+                   onClick={()=>{if(endDateRef.current?.showPicker){endDateRef.current.showPicker()}}}
                   min={formData.startDate || today}
                   disabled={!formData.startDate}
                   value={formData.endDate || ''}

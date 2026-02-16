@@ -206,16 +206,6 @@ export default function Expenses() {
         title="Delete Expense?"
         message="This Action Will permanently Delete This Expense."
       />
-
-     <div className="md:mt-[-20px] md:mb-[-10px]">
-       <button
-         onClick={() => window.history.back()}
-         className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
-       >
-         <ArrowLeft className="w-5 h-5 text-gray-800 dark:text-white" />
-       </button>
-     </div>
-
       <Card className="shadow-md">
         <CardHeader className="pb-3 sm:pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

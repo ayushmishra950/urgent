@@ -92,7 +92,8 @@ const DepartmentDialog: React.FC<DepartmentDialogProps> = ({
       console.log(err);
       toast({
         title: "Error",
-        description: err?.response?.data?.message || "Something went wrong",
+        description: err?.response?.data?.message || err?.message || "Something went wrong",
+        variant:"destructive"
       });
     }
     finally {
