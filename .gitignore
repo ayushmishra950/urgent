@@ -4,3 +4,4 @@ office-harmony-hub/node_modules/
 # Ignore node_modules in back
 back/node_modules/
 
+back/.env
